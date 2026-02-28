@@ -106,4 +106,4 @@ jobs:
             # 5. 重启服务
             pm2 delete yahoo-proxy-deno || true
             DENO_BIN=$(which deno)
-            pm2 start my-server.ts --name yahoo-proxy-deno --interpreter="$DENO_BIN" --interpreter-args="run -A"
+            pm2 start my-server.ts --name yahoo-proxy-deno --interpreter="$DENO_BIN" --interpreter-args="run -A --node-modules-dir=false"

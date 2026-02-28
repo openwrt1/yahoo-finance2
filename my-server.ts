@@ -5,7 +5,8 @@ import YahooFinance from "./src/index.ts";
 import { ExtendedCookieJar } from "./src/lib/cookieJar.ts";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
-const FileCookieStore = require("tough-cookie-file-store");
+const FileCookieStorePkg = require("tough-cookie-file-store");
+const FileCookieStore = FileCookieStorePkg.default || FileCookieStorePkg;
 import { existsSync, writeFileSync } from "node:fs";
 
 // 基础配置
