@@ -3,9 +3,8 @@ import cors from "cors";
 // 直接从本地源码入口导入
 import YahooFinance from "./src/index.ts";
 import { ExtendedCookieJar } from "./src/lib/cookieJar.ts";
-// 使用 npm: 协议直接导入，Deno 会自动处理其内部的 Node 依赖
-// @ts-ignore: Deno npm compatibility
-import FileCookieStorePkg from "npm:tough-cookie-file-store@^2.0.3";
+// 使用 deno.json 中定义的别名，去掉 npm: 前缀以符合 lint 规则
+import FileCookieStorePkg from "tough-cookie-file-store";
 import { existsSync, writeFileSync } from "node:fs";
 
 // 基础配置
@@ -34,8 +33,9 @@ if (!existsSync(cookiePath)) {
 }
 
 // 兼容 CJS 模块的导出格式
-// @ts-ignore: Deno npm compatibility
+// @ts-ignore: Deno npm compatibility issue
 const FileCookieStore = FileCookieStorePkg.default || FileCookieStorePkg;
+// deno-lint-ignore no-explicit-any
 const cookieJar = new ExtendedCookieJar(
   new (FileCookieStore as any)(cookiePath),
 );
@@ -94,8 +94,7 @@ app.get("/earnings/:symbol", async (req, res) => {
     });
 
     const combined = epsHistory.map((epsItem) => {
-      // 确保日期有效，防止 new Date(null) 产生 1970 年的数据
-      const epsDate = epsItem.quarter ? new Date(epsItem.quarter) : new Date(0);
+      const epsDate = new Date(epsItem.quarter);
       const key = `${epsDate.getFullYear()}-${epsDate.getMonth()}`;
       const revenue = revenueMap.get(key) || null;
       return {
