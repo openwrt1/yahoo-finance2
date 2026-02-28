@@ -31,7 +31,11 @@ if (!existsSync(cookiePath)) {
   }
 }
 
-const cookieJar = new ExtendedCookieJar(new FileCookieStore(cookiePath));
+// 修复 Deno 中 npm 模块导入的构造函数问题
+// @ts-ignore
+const cookieJar = new ExtendedCookieJar(
+  new (FileCookieStore.default || FileCookieStore)(cookiePath),
+);
 
 // 实例化。注意：直接导入源码时，YahooFinance 就是类本身
 const yahooFinance = new YahooFinance({
