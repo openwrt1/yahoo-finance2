@@ -85,6 +85,7 @@
 获取市场热门列表，如涨幅榜、最活跃股票、核心资产等。
 
 - **今日涨幅榜:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=day_gainers`
+- **今日跌幅榜:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=day_losers`
 - **最活跃股票:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=most_actives`
 - **低估值增长股:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=undervalued_growth_stocks`
 - **核心资产 (Mutual Funds):** 点击查看 `http://64.69.34.176:3007/screener?scrIds=portfolio_anchors`
