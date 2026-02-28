@@ -272,9 +272,19 @@ app.get("/options/:symbol", async (req, res) => {
   try {
     const queryOptions: any = {};
     if (date) {
-      // 支持传入 YYYY-MM-DD 字符串或 Unix 时间戳 (秒)
-      const d = new Date(date as string);
-      queryOptions.date = isNaN(d.getTime()) ? Number(date) : d;
+      // 优先判断是否为纯数字时间戳（秒或毫秒）
+      if (/^\d+$/.test(date as string)) {
+        queryOptions.date = Number(date);
+      } else {
+        // 否则尝试解析为日期字符串
+        queryOptions.date = new Date(date as string);
+        // 修正：确保日期字符串被解析为 UTC 时间，避免时区偏差导致 Yahoo 忽略参数
+        const dateStr = date as string;
+        // 如果已经是 ISO 格式则直接解析，否则拼接 T00:00:00Z 强制 UTC
+        queryOptions.date = dateStr.includes("T")
+          ? new Date(dateStr)
+          : new Date(`${dateStr}T00:00:00Z`);
+      }
     }
     const result = await yahooFinance.options(symbol, queryOptions);
     res.json(result);
