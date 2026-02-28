@@ -80,14 +80,30 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
-            # 尝试进入目录，如果失败则尝试家目录下的路径
-            cd /root/yahoo-finance-proxy || cd ~/yahoo-finance-proxy || exit 1
+            set -e
+            # 1. 进入宝塔面板管理的正确目录
+            PROXY_DIR="/www/wwwroot/web.sitepeng.dpdns.org/yahoo-finance-proxy"
+            if [ ! -d "$PROXY_DIR" ]; then
+              echo "❌ 错误: 找不到目录 $PROXY_DIR"
+              exit 1
+            fi
+            cd "$PROXY_DIR"
 
-            git fetch origin dev
+            # 2. 同步代码
+            git fetch --all
             git reset --hard origin/dev
 
-            export PATH="$HOME/.deno/bin:$PATH"
+            # 3. 配置 Deno 环境
+            export DENO_INSTALL="$HOME/.deno"
+            export PATH="$DENO_INSTALL/bin:$PATH"
+            if ! command -v deno > /dev/null; then
+              curl -fsSL https://deno.land/install.sh | sh
+            fi
+
+            # 4. 更新校验 Schema (解决核心资产报错的关键)
             deno task schema
 
-            # 使用名称重启，如果不存在则重新启动
-            pm2 restart yahoo-proxy-deno || pm2 start my-server.ts --name yahoo-proxy-deno --interpreter deno --interpreter-args "run -A"
+            # 5. 重启服务
+            pm2 delete yahoo-proxy-deno || true
+            DENO_BIN=$(which deno)
+            pm2 start my-server.ts --name yahoo-proxy-deno --interpreter="$DENO_BIN" --interpreter-args="run -A"
