@@ -1,6 +1,6 @@
 {
-  "name": "@pengwang3123/yahoo-finance2-stealth",
-  "version": "0.0.2",
+  "name": "@openwrt1/yahoo-finance2-stealth",
+  "version": "0.0.1",
   "description": "JS API for Yahoo Finance",
   "keywords": [
     "yahoo",

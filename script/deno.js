@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = {
-    "name": "@pengwang3123/yahoo-finance2-stealth",
-    "version": "0.0.2",
+    "name": "@openwrt1/yahoo-finance2-stealth",
+    "version": "0.0.1",
     "tasks": {
         "cli": "deno run -A bin/yahoo-finance.ts",
         "docs:gen": "deno doc --output=jsdocs --html $(jq -r '.exports | to_entries[] | .value' deno.json)",
@@ -68,7 +68,12 @@ exports.default = {
         "ts-json-schema-generator": "npm:ts-json-schema-generator@^2.4.0"
     },
     "fmt": {
-        "exclude": ["tests/fixtures", "tests/http", "**/*.schema.json"]
+        "exclude": [
+            "tests/fixtures",
+            "tests/http",
+            "**/*.schema.json",
+            "API_TEST.md"
+        ]
     },
     "publish": {
         "exclude": [
