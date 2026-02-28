@@ -109,8 +109,11 @@ app.get("/earnings/:symbol", async (req, res) => {
     );
     res.json(combined);
   } catch (error) {
-    // @ts-ignore: error type
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: String(error) });
+    }
   }
 });
 
@@ -130,8 +133,11 @@ app.get("/analysis/:symbol", async (req, res) => {
     });
     res.json(result);
   } catch (error) {
-    // @ts-ignore: error type
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: String(error) });
+    }
   }
 });
 
@@ -158,12 +164,16 @@ app.get("/screener", async (req, res) => {
         region: "US",
         lang: "en-US",
       },
+      undefined,
       { validateResult: false },
     );
     res.json(result);
   } catch (error) {
-    // @ts-ignore: error type
-    res.status(500).json({ error: error.message });
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: String(error) });
+    }
   }
 });
 
