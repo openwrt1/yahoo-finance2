@@ -43,6 +43,9 @@ const cookieJar = new ExtendedCookieJar(
   new (FileCookieStore as any)(cookiePath),
 );
 
+
+
+
 // 实例化。注意：直接导入源码时，YahooFinance 就是类本身
 const yahooFinance = new YahooFinance({
   cookieJar,
