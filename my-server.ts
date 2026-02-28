@@ -1,10 +1,9 @@
-import express from "npm:express";
-import cors from "npm:cors";
+import express from "express";
+import cors from "cors";
 // 直接从本地源码入口导入
 import YahooFinance from "./src/index.ts";
 import { ExtendedCookieJar } from "./src/lib/cookieJar.ts";
-// 修正: 使用默认导入，并加上 npm: 前缀
-import FileCookieStore from "npm:tough-cookie-file-store";
+import FileCookieStore from "tough-cookie-file-store";
 import { existsSync, writeFileSync } from "node:fs";
 
 // 基础配置
