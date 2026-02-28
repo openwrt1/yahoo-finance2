@@ -3,7 +3,9 @@ import cors from "cors";
 // 直接从本地源码入口导入
 import YahooFinance from "./src/index.ts";
 import { ExtendedCookieJar } from "./src/lib/cookieJar.ts";
-import FileCookieStore from "tough-cookie-file-store";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const FileCookieStore = require("tough-cookie-file-store");
 import { existsSync, writeFileSync } from "node:fs";
 
 // 基础配置
@@ -31,11 +33,7 @@ if (!existsSync(cookiePath)) {
   }
 }
 
-// 修复 Deno 中 npm 模块导入的构造函数问题
-// @ts-ignore: Deno npm compatibility issue with FileCookieStore constructor
-const cookieJar = new ExtendedCookieJar(
-  new (FileCookieStore.default || FileCookieStore)(cookiePath),
-);
+const cookieJar = new ExtendedCookieJar(new FileCookieStore(cookiePath));
 
 // 实例化。注意：直接导入源码时，YahooFinance 就是类本身
 const yahooFinance = new YahooFinance({
@@ -95,7 +93,9 @@ app.get("/earnings/:symbol", async (req, res) => {
       const key = `${epsDate.getFullYear()}-${epsDate.getMonth()}`;
       const revenue = revenueMap.get(key) || null;
       return {
-        date: epsItem.quarter.toISOString().split("T")[0],
+        date: epsItem.quarter
+          ? epsItem.quarter.toISOString().split("T")[0]
+          : null,
         year: epsDate.getFullYear(),
         quarter: Math.floor(epsDate.getMonth() / 3) + 1,
         epsActual: epsItem.epsActual,
