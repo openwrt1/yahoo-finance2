@@ -1,9 +1,11 @@
-import express from "express";
-import cors from "cors";
+import express from "npm:express";
+import cors from "npm:cors";
 // 直接从本地源码入口导入
 import YahooFinance from "./src/index.ts";
 import { ExtendedCookieJar } from "./src/lib/cookieJar.ts";
-import { FileCookieStore } from "tough-cookie-file-store";
+// 修正: 使用默认导入，并加上 npm: 前缀
+import FileCookieStore from "npm:tough-cookie-file-store";
+import { existsSync, writeFileSync } from "node:fs";
 
 // 基础配置
 const fetchOptions = {
@@ -19,6 +21,17 @@ const fetchOptions = {
 
 // 设置 Cookie 持久化存储
 const cookiePath = "./cookies.json";
+
+// 修正: 检查文件是否存在，不存在则创建，防止 FileCookieStore 报错
+if (!existsSync(cookiePath)) {
+  try {
+    writeFileSync(cookiePath, "{}");
+    console.log("Created empty cookies.json");
+  } catch (err) {
+    console.error("Failed to create cookies.json:", err);
+  }
+}
+
 const cookieJar = new ExtendedCookieJar(new FileCookieStore(cookiePath));
 
 // 实例化。注意：直接导入源码时，YahooFinance 就是类本身
@@ -93,6 +106,7 @@ app.get("/earnings/:symbol", async (req, res) => {
     );
     res.json(combined);
   } catch (error) {
+    // @ts-ignore: error type
     res.status(500).json({ error: error.message });
   }
 });
@@ -113,6 +127,7 @@ app.get("/analysis/:symbol", async (req, res) => {
     });
     res.json(result);
   } catch (error) {
+    // @ts-ignore: error type
     res.status(500).json({ error: error.message });
   }
 });
@@ -144,14 +159,15 @@ app.get("/screener", async (req, res) => {
     );
     res.json(result);
   } catch (error) {
+    // @ts-ignore: error type
     res.status(500).json({ error: error.message });
   }
 });
 
 // --- 你的接口代码结束 ---
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(
-    `Yahoo Proxy Server (Source Mode) running on http://localhost:${PORT}`,
+    `Yahoo Proxy Server (Source Mode) running on http://0.0.0.0:${PORT}`,
   );
 });

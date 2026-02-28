@@ -7,3 +7,4 @@
 *.har
 npm
 /local
+cookies.json
