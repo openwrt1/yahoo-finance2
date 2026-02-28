@@ -80,9 +80,14 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
-            cd /root/yahoo-finance-proxy
+            # 尝试进入目录，如果失败则尝试家目录下的路径
+            cd /root/yahoo-finance-proxy || cd ~/yahoo-finance-proxy || exit 1
+
             git fetch origin dev
             git reset --hard origin/dev
+
             export PATH="$HOME/.deno/bin:$PATH"
             deno task schema
-            pm2 restart 61
+
+            # 使用名称重启，如果不存在则重新启动
+            pm2 restart yahoo-proxy-deno || pm2 start my-server.ts --name yahoo-proxy-deno --interpreter deno --interpreter-args "run -A"
