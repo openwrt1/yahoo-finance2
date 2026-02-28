@@ -61,6 +61,9 @@ declare namespace _default {
         "json-schema": string;
         "oas-schema-walker": string;
         "semantic-release": string;
+        util: string;
+        fs: string;
+        path: string;
         "tough-cookie": string;
         "tough-cookie-file-store": string;
         "ts-json-schema-generator": string;

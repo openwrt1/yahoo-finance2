@@ -61,6 +61,9 @@ export default {
         "json-schema": "npm:json-schema@^0.4.0",
         "oas-schema-walker": "npm:oas-schema-walker@^1.1.5",
         "semantic-release": "npm:semantic-release@^25.0.2",
+        "util": "node:util",
+        "fs": "node:fs",
+        "path": "node:path",
         "tough-cookie": "npm:tough-cookie@^5.1.1",
         "tough-cookie-file-store": "npm:tough-cookie-file-store@^2.0.3",
         "ts-json-schema-generator": "npm:ts-json-schema-generator@^2.4.0"
