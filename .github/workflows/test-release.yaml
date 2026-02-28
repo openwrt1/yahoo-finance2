@@ -47,6 +47,7 @@ jobs:
   release:
     name: Release (if relevant)
     needs: ["tests"]
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       # https://github.com/semantic-release/semantic-release/issues/2469
@@ -55,8 +56,6 @@ jobs:
       pull-requests: write # ditto
       id-token: write # The OIDC ID token is used for authentication with JSR, codecov, npm with provenance
     steps:
-      - run: echo 'The Tests workflow passed'
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -64,14 +63,10 @@ jobs:
 
       - run: deno task build:npm
 
-      - run: npm install -D @semantic-release/exec @sebbo2002/semantic-release-jsr conventional-changelog-conventionalcommits
-
-      # We did this already but it seems not everythign was installed for jsr publish?  Let's try.
-      - run: deno install
-      # @sebbo2002/semantic-release-jsr seems to need it
-      - run: echo '{"version":"0.0.1"}' > package.json
-
-      - name: Release if relevant
+      - name: Publish to NPM
+        run: |
+          cd npm
+          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          npm publish --access public
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
