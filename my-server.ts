@@ -97,7 +97,8 @@ app.get("/earnings/:symbol", async (req, res) => {
     });
 
     const combined = epsHistory.map((epsItem) => {
-      const epsDate = new Date(epsItem.quarter);
+      // 确保日期有效，防止 new Date(null) 产生 1970 年的数据
+      const epsDate = epsItem.quarter ? new Date(epsItem.quarter) : new Date(0);
       const key = `${epsDate.getFullYear()}-${epsDate.getMonth()}`;
       const revenue = revenueMap.get(key) || null;
       return {
