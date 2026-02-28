@@ -1,6 +1,6 @@
 {
-  "name": "@gadicc/yahoo-finance2",
-  "version": "0.0.1",
+  "name": "@rocket/yahoo-finance2-stealth",
+  "version": "0.0.1-custom",
   "tasks": {
     "cli": "deno run -A bin/yahoo-finance.ts",
     "docs:gen": "deno doc --output=jsdocs --html $(jq -r '.exports | to_entries[] | .value' deno.json)",
@@ -78,11 +78,6 @@
     ]
   },
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "dom.asynciterable",
-      "deno.ns"
-    ]
+    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
   }
 }

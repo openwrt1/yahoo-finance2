@@ -14,9 +14,8 @@ const CONFIG_FAKE_URL = "http://config.yf2/";
 let crumb: string | null = null;
 
 const parseHtmlEntities = (str: string) =>
-  str.replace(
-    /&#x([0-9A-Fa-f]{1,3});/gi,
-    (_, numStr) => String.fromCharCode(parseInt(numStr, 16)),
+  str.replace(/&#x([0-9A-Fa-f]{1,3});/gi, (_, numStr) =>
+    String.fromCharCode(parseInt(numStr, 16)),
   );
 
 type CrumbOptions = Parameters<typeof fetch>[1] & {
@@ -144,7 +143,7 @@ export async function _getCrumb(
         };
         logger.debug(
           "fetch",
-          consentLocation, /*, collectConsentFetchOptions */
+          consentLocation /*, collectConsentFetchOptions */,
         );
 
         const collectConsentResponse = await fetch(
@@ -153,16 +152,17 @@ export async function _getCrumb(
         );
         const collectConsentBody = await collectConsentResponse.text();
 
-        const collectConsentResponseParams = [
-          ...collectConsentBody.matchAll(
-            /<input type="hidden" name="([^"]+)" value="([^"]+)">/g,
-          ),
-        ]
-          .map(
-            ([, name, value]) =>
-              `${name}=${encodeURIComponent(parseHtmlEntities(value))}&`,
-          )
-          .join("") + "agree=agree&agree=agree";
+        const collectConsentResponseParams =
+          [
+            ...collectConsentBody.matchAll(
+              /<input type="hidden" name="([^"]+)" value="([^"]+)">/g,
+            ),
+          ]
+            .map(
+              ([, name, value]) =>
+                `${name}=${encodeURIComponent(parseHtmlEntities(value))}&`,
+            )
+            .join("") + "agree=agree&agree=agree";
 
         const collectConsentSubmitFetchOptions: typeof fetchOptions = {
           ...consentFetchOptions,
@@ -182,7 +182,7 @@ export async function _getCrumb(
         };
         logger.debug(
           "fetch",
-          consentLocation, /*, collectConsentSubmitFetchOptions */
+          consentLocation /*, collectConsentSubmitFetchOptions */,
         );
         const collectConsentSubmitResponse = await fetch(
           consentLocation,
@@ -227,7 +227,7 @@ export async function _getCrumb(
 
         logger.debug(
           "fetch",
-          collectConsentSubmitResponseLocation, /*, copyConsentFetchOptions */
+          collectConsentSubmitResponseLocation /*, copyConsentFetchOptions */,
         );
         const copyConsentResponse = await fetch(
           collectConsentSubmitResponseLocation,
@@ -245,9 +245,8 @@ export async function _getCrumb(
           );
         }
 
-        const copyConsentResponseLocation = copyConsentResponse.headers.get(
-          "location",
-        );
+        const copyConsentResponseLocation =
+          copyConsentResponse.headers.get("location");
         if (!copyConsentResponseLocation) {
           throw new Error(
             "collectConsentSubmitResponse unexpectedly did not return a Location header, please report.",
@@ -347,7 +346,8 @@ export async function _getCrumb(
   crumb = context.crumb;
   */
 
-  const GET_CRUMB_URL = "https://query1.finance.yahoo.com/v1/test/getcrumb";
+  // 尝试使用 query2 替代 query1，这通常能绕过一些限制
+  const GET_CRUMB_URL = "https://query2.finance.yahoo.com/v1/test/getcrumb";
   const getCrumbOptions: typeof fetchOptions = {
     ...fetchOptions,
     headers: {
@@ -355,10 +355,18 @@ export async function _getCrumb(
       cookie: await cookieJar.getCookieString(GET_CRUMB_URL),
       origin: "https://finance.yahoo.com",
       referer: url,
-      accept: "*/*",
+      accept: "text/plain, */*; q=0.01",
+      "cache-control": "no-cache",
+      "sec-ch-ua":
+        '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": '"macOS"',
+      "sec-fetch-dest": "empty",
+      "sec-fetch-mode": "cors",
+      "sec-fetch-site": "same-site",
+      "sec-fetch-user": "?1",
       "accept-encoding": "gzip, deflate, br",
       "accept-language": "en-US,en;q=0.9",
-      "content-type": "text/plain",
     },
     devel: {
       id: "getCrumb-getcrumb",
@@ -367,9 +375,13 @@ export async function _getCrumb(
     },
   };
 
-  logger.debug("fetch", GET_CRUMB_URL /*, getCrumbOptions */);
+  logger.debug("fetch", GET_CRUMB_URL, getCrumbOptions);
   const getCrumbResponse = await fetch(GET_CRUMB_URL, getCrumbOptions);
   if (getCrumbResponse.status !== 200) {
+    // 新增：打印状态码和返回的内容片段，以便诊断
+    const errorText = await getCrumbResponse.text();
+    console.log("Yahoo Response Status:", getCrumbResponse.status);
+    console.log("Yahoo Response Body Snippet:", errorText.slice(0, 500));
     throw new Error(
       "Failed to get crumb, status " +
         getCrumbResponse.status +

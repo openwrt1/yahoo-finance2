@@ -24,18 +24,17 @@ await build({
   },
   package: {
     // package.json properties
-    name: "yahoo-finance2",
-    // version: Deno.args[0],
-    version: "0.0.1", // will be replaced on publish
+    name: denoJson.name,
+    version: denoJson.version,
     description: "JS API for Yahoo Finance",
     author: "Gadi Cohen <dragon@wastelands.net>",
     license: "MIT",
     repository: {
       type: "git",
-      url: "git+https://github.com/gadicc/yahoo-finance2.git",
+      url: "git+https://github.com/你的用户名/yahoo-finance2-stealth.git",
     },
     bugs: {
-      url: "https://github.com/gadicc/yahoo-finance2/issues",
+      url: "https://github.com/你的用户名/yahoo-finance2-stealth/issues",
     },
     keywords: [
       "yahoo",
@@ -51,8 +50,8 @@ await build({
       "client",
       "library",
     ],
-    "engines": {
-      "node": ">=20.0.0",
+    engines: {
+      node: ">=20.0.0",
     },
     dependencies: {
       "tough-cookie": denoJson.imports["tough-cookie"],
