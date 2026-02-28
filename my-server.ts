@@ -340,6 +340,33 @@ app.get("/fundamentals/:symbol", async (req, res) => {
   }
 });
 
+// 接口 17: 通用财务摘要 (quoteSummary) - 支持所有子模块
+app.get("/quoteSummary/:symbol", async (req, res) => {
+  const { symbol } = req.params;
+  const { modules, formatted } = req.query;
+
+  try {
+    const queryOptions: any = {};
+
+    // 如果提供了 modules 参数，则按逗号分割成数组；如果是 "all" 则直接传递
+    if (modules) {
+      queryOptions.modules =
+        modules === "all" ? "all" : (modules as string).split(",");
+    }
+
+    if (formatted) {
+      queryOptions.formatted = formatted === "true";
+    }
+
+    const result = await yahooFinance.quoteSummary(symbol, queryOptions);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
 // --- 你的接口代码结束 ---
 
 app.listen(PORT, "0.0.0.0", () => {

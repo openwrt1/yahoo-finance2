@@ -80,6 +80,34 @@
 - **今日涨幅榜:** 点击查看 `http://64.69.34.176:3007/daily-gainers`
 - **今日跌幅榜:** 点击查看 `http://64.69.34.176:3007/daily-losers`
 
+## 9. 财务摘要完整模块 (quoteSummary)
+
+这是最强大的接口，支持通过 `modules` 参数获取指定的子模块数据（支持多个模块逗号分隔）。
+
+- **接口路径:** `/quoteSummary/:symbol?modules=module1,module2`
+- **盈利趋势测试 (TSLA):** 点击测试 TSLA 盈利趋势
+- **财务报表测试 (TSLA):** 点击测试 TSLA 资产负债表与现金流
+- **全量预测数据 (TSLA):** 点击测试 TSLA 盈利预测与历史
+
+**可用子模块 (Modules) 分类列表:**
+
+- **盈利与预测:**
+  - `earningsTrend`: 盈利趋势（分析师预测、EPS 趋势）。
+  - `earnings`: 历史盈利数据。
+  - `earningsHistory`: 季度盈利历史（实际 vs 预测）。
+  - `financialData`: 财务核心指标（目标价、营收增长、现金流等）。
+- **财务报表:**
+  - 年度: `incomeStatementHistory`, `balanceSheetHistory`, `cashflowStatementHistory`
+  - 季度: `incomeStatementHistoryQuarterly`, `balanceSheetHistoryQuarterly`, `cashflowStatementHistoryQuarterly`
+- **持仓与股东:**
+  - `majorHoldersBreakdown`, `insiderHolders`, `insiderTransactions`, `institutionOwnership`, `fundOwnership`.
+- **公司概况与统计:**
+  - `assetProfile` (简介), `defaultKeyStatistics` (关键统计), `summaryDetail` (摘要详情), `price` (价格), `quoteType` (类型).
+- **趋势与评级:**
+  - `recommendationTrend` (推荐趋势), `upgradeDowngradeHistory` (评级调整历史), `indexTrend`, `sectorTrend`.
+
+---
+
 ## 4. 选股器 (Screener)
 
 获取市场热门列表，如涨幅榜、最活跃股票、核心资产等。
