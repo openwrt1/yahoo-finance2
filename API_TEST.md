@@ -15,7 +15,7 @@
 
 获取公司的基本面、市值、市盈率、财务摘要及财报日历。
 
-- **测试地址:** 点击测试 AAPL `http://64.69.34.176:3007/analysis/AAPL`
+- **测试地址 (AAPL):** http://64.69.34.176:3007/analysis/AAPL
 - **接口路径:** `/analysis/:symbol`
 - **包含数据:**
   - `price`: 实时价格、公司全称、交易所信息。
@@ -31,7 +31,7 @@
 
 获取过去几个季度的每股收益 (EPS) 和 营收 (Revenue) 实际值与预测值。
 
-- **测试地址:** 点击测试 TSLA `http://64.69.34.176:3007/earnings/TSLA`
+- **测试地址 (TSLA):** http://64.69.34.176:3007/earnings/TSLA
 - **接口路径:** `/earnings/:symbol`
 - **包含数据:**
   - `date`: 财报截止日期。
@@ -45,7 +45,7 @@
 
 获取与指定股票业务相似的其他公司代码列表。
 
-- **测试地址:** 点击测试 NVDA `http://64.69.34.176:3007/peers/NVDA`
+- **测试地址 (NVDA):** http://64.69.34.176:3007/peers/NVDA
 - **接口路径:** `/peers/:symbol`
 - **返回数据:** 字符串数组，例如 `["AMD", "AVGO", "INTC", ...]`。
 
@@ -53,9 +53,9 @@
 
 ## 5. 实时行情与图表
 
-- **实时报价 (Quote):** 测试 AAPL `http://64.69.34.176:3007/quote/AAPL`
-- **历史价格 (Historical):** 测试 TSLA `http://64.69.34.176:3007/historical/TSLA`
-- **K线图原始数据 (Chart):** 测试 NVDA `http://64.69.34.176:3007/chart/NVDA`
+- **实时报价 (Quote):** http://64.69.34.176:3007/quote/AAPL
+- **历史价格 (Historical):** http://64.69.34.176:3007/historical/TSLA
+- **K线图原始数据 (Chart):** http://64.69.34.176:3007/chart/NVDA
 
 ---
 
@@ -69,25 +69,30 @@
 
 ## 7. 衍生品与深度洞察
 
-- **期权链 (Options):** 测试 AAPL `http://64.69.34.176:3007/options/AAPL`
-- **市场洞察 (Insights):** 测试 MSFT `http://64.69.34.176:3007/insights/MSFT`
-- **原始财务序列:** 测试 GOOG `http://64.69.34.176:3007/fundamentals/GOOG`
+- **期权链 (Options):** http://64.69.34.176:3007/options/AAPL
+- **市场洞察 (Insights):** http://64.69.34.176:3007/insights/MSFT
+- **原始财务序列:** http://64.69.34.176:3007/fundamentals/GOOG
 
 ---
 
 ## 8. 市场排行榜
 
-- **今日涨幅榜:** 点击查看 `http://64.69.34.176:3007/daily-gainers`
-- **今日跌幅榜:** 点击查看 `http://64.69.34.176:3007/daily-losers`
+- **今日涨幅榜:** http://64.69.34.176:3007/daily-gainers
+- **今日跌幅榜:** http://64.69.34.176:3007/daily-losers
 
 ## 9. 财务摘要完整模块 (quoteSummary)
 
 这是最强大的接口，支持通过 `modules` 参数获取指定的子模块数据（支持多个模块逗号分隔）。
 
-- **接口路径:** `/quoteSummary/:symbol?modules=module1,module2`
-- **盈利趋势测试 (TSLA):** 点击测试 TSLA 盈利趋势
-- **财务报表测试 (TSLA):** 点击测试 TSLA 资产负债表与现金流
-- **全量预测数据 (TSLA):** 点击测试 TSLA 盈利预测与历史
+- **接口路径:** `/quote-summary/:symbol?modules=module1,module2`
+- **盈利趋势测试 (TSLA):** http://64.69.34.176:3007/quote-summary/TSLA?modules=earningsTrend
+- **财务报表测试 (TSLA):** http://64.69.34.176:3007/quote-summary/TSLA?modules=balanceSheetHistory,cashflowStatementHistory
+- **全量预测数据 (TSLA):** http://64.69.34.176:3007/quote-summary/TSLA?modules=earningsTrend,earningsHistory,financialData
+- **未来财报日期与发布时间 (TSLA):** http://64.69.34.176:3007/quote-summary/TSLA?modules=calendarEvents
+- **回报率对比 (YTD/1y/3y/5y - 以 SPY 为例):** http://64.69.34.176:3007/quote-summary/SPY?modules=fundPerformance
+- **公司业务简介与行业 (AAPL):** http://64.69.34.176:3007/quote-summary/AAPL?modules=assetProfile
+- **个股关键统计与回报 (TSLA 1年涨幅):** http://64.69.34.176:3007/quote-summary/TSLA?modules=defaultKeyStatistics
+- **做空人数统计 (TSLA):** http://64.69.34.176:3007/short-interest/TSLA
 
 **可用子模块 (Modules) 分类列表:**
 
@@ -97,6 +102,7 @@
   - `earningsHistory`: 季度盈利历史（实际 vs 预测）。
   - `financialData`: 财务核心指标（目标价、营收增长、现金流等）。
 - **财务报表:**
+  - `fundPerformance`: 历史回报率（YTD, 1y, 3y, 5y trailing returns）。
   - 年度: `incomeStatementHistory`, `balanceSheetHistory`, `cashflowStatementHistory`
   - 季度: `incomeStatementHistoryQuarterly`, `balanceSheetHistoryQuarterly`, `cashflowStatementHistoryQuarterly`
 - **持仓与股东:**
@@ -106,18 +112,26 @@
 - **趋势与评级:**
   - `recommendationTrend` (推荐趋势), `upgradeDowngradeHistory` (评级调整历史), `indexTrend`, `sectorTrend`.
 
+> **提示 - 如何看盘前/盘后:**
+>
+> 1. 访问上面的 **未来财报日期** 链接。
+> 2. 在 `calendarEvents.earnings.earningsDate` 中查看第一个时间戳。
+> 3. 将该时间戳转换为美东时间：
+>    - 若在 09:30 AM 之前，即为 **盘前 (BMO)**。
+>    - 若在 04:00 PM 之后，即为 **盘后 (AMC)**。
+
 ---
 
 ## 4. 选股器 (Screener)
 
 获取市场热门列表，如涨幅榜、最活跃股票、核心资产等。
 
-- **今日涨幅榜:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=day_gainers`
-- **今日跌幅榜:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=day_losers`
-- **最活跃股票:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=most_actives`
-- **低估值增长股:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=undervalued_growth_stocks`
-- **核心资产 (Mutual Funds):** 点击查看 `http://64.69.34.176:3007/screener?scrIds=portfolio_anchors`
-- **高收益债券基金:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=high_yield_bond`
+- **今日涨幅榜:** http://64.69.34.176:3007/screener?scrIds=day_gainers
+- **今日跌幅榜:** http://64.69.34.176:3007/screener?scrIds=day_losers
+- **最活跃股票:** http://64.69.34.176:3007/screener?scrIds=most_actives
+- **低估值增长股:** http://64.69.34.176:3007/screener?scrIds=undervalued_growth_stocks
+- **核心资产 (Mutual Funds):** http://64.69.34.176:3007/screener?scrIds=portfolio_anchors
+- **高收益债券基金:** http://64.69.34.176:3007/screener?scrIds=high_yield_bond
 - **接口路径:** `/screener`
 - **可选参数:**
   - `scrIds`: 选股器 ID (可选: `day_gainers`, `most_actives`, `undervalued_growth_stocks`, `portfolio_anchors` 等)。

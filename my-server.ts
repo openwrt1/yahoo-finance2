@@ -341,29 +341,62 @@ app.get("/fundamentals/:symbol", async (req, res) => {
 });
 
 // 接口 17: 通用财务摘要 (quoteSummary) - 支持所有子模块
-app.get("/quoteSummary/:symbol", async (req, res) => {
+app.get(
+  ["/quoteSummary/:symbol", "/quote-summary/:symbol"],
+  async (req, res) => {
+    const { symbol } = req.params;
+    const { modules, formatted } = req.query;
+
+    try {
+      const queryOptions: any = {};
+
+      // 如果提供了 modules 参数，则按逗号分割成数组；如果是 "all" 则直接传递
+      if (modules) {
+        queryOptions.modules =
+          modules === "all" ? "all" : (modules as string).split(",");
+      }
+
+      if (formatted) {
+        queryOptions.formatted = formatted === "true";
+      }
+
+      const result = await yahooFinance.quoteSummary(symbol, queryOptions);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  },
+);
+
+// 接口 18: 做空数据分析 (Short Interest) - 当前统计 + 历史趋势
+app.get("/short-interest/:symbol", async (req, res) => {
   const { symbol } = req.params;
-  const { modules, formatted } = req.query;
-
   try {
-    const queryOptions: any = {};
-
-    // 如果提供了 modules 参数，则按逗号分割成数组；如果是 "all" 则直接传递
-    if (modules) {
-      queryOptions.modules =
-        modules === "all" ? "all" : (modules as string).split(",");
-    }
-
-    if (formatted) {
-      queryOptions.formatted = formatted === "true";
-    }
-
-    const result = await yahooFinance.quoteSummary(symbol, queryOptions);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({
-      error: error instanceof Error ? error.message : String(error),
+    // 获取当前做空统计 (来自 quoteSummary，这是最可靠的数据源)
+    const summary = await yahooFinance.quoteSummary(symbol, {
+      modules: ["defaultKeyStatistics"],
+      formatted: true, // 开启格式化，获取易读的字符串
     });
+
+    const current = {
+      sharesShort: summary.defaultKeyStatistics?.sharesShort, // 原始数值或带单位的字符串
+      shortRatio: summary.defaultKeyStatistics?.shortRatio, // 补空天数
+      shortPercentOfFloat: summary.defaultKeyStatistics?.shortPercentOfFloat, // 做空比例
+      date:
+        summary.defaultKeyStatistics?.dateShortInterest
+          ?.toISOString()
+          .split("T")[0] || null,
+    };
+
+    // 注意：由于 yahoo-finance2 库的验证限制，历史做空序列暂时无法通过 fundamentalsTimeSeries 获取。
+    // 我们仅返回当前最准确的做空数据。
+    res.json({ symbol, current, history: [] });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
   }
 });
 
