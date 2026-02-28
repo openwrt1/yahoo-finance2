@@ -3,10 +3,9 @@ import cors from "cors";
 // 直接从本地源码入口导入
 import YahooFinance from "./src/index.ts";
 import { ExtendedCookieJar } from "./src/lib/cookieJar.ts";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
-const FileCookieStorePkg = require("tough-cookie-file-store");
-const FileCookieStore = FileCookieStorePkg.default || FileCookieStorePkg;
+// 使用 npm: 协议直接导入，Deno 会自动处理其内部的 Node 依赖
+// @ts-ignore: Deno npm compatibility
+import FileCookieStorePkg from "npm:tough-cookie-file-store@^2.0.3";
 import { existsSync, writeFileSync } from "node:fs";
 
 // 基础配置
@@ -34,7 +33,12 @@ if (!existsSync(cookiePath)) {
   }
 }
 
-const cookieJar = new ExtendedCookieJar(new FileCookieStore(cookiePath));
+// 兼容 CJS 模块的导出格式
+// @ts-ignore: Deno npm compatibility
+const FileCookieStore = FileCookieStorePkg.default || FileCookieStorePkg;
+const cookieJar = new ExtendedCookieJar(
+  new (FileCookieStore as any)(cookiePath),
+);
 
 // 实例化。注意：直接导入源码时，YahooFinance 就是类本身
 const yahooFinance = new YahooFinance({
@@ -90,7 +94,8 @@ app.get("/earnings/:symbol", async (req, res) => {
     });
 
     const combined = epsHistory.map((epsItem) => {
-      const epsDate = new Date(epsItem.quarter);
+      // 确保日期有效，防止 new Date(null) 产生 1970 年的数据
+      const epsDate = epsItem.quarter ? new Date(epsItem.quarter) : new Date(0);
       const key = `${epsDate.getFullYear()}-${epsDate.getMonth()}`;
       const revenue = revenueMap.get(key) || null;
       return {
