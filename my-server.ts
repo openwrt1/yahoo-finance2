@@ -32,7 +32,7 @@ if (!existsSync(cookiePath)) {
 }
 
 // 修复 Deno 中 npm 模块导入的构造函数问题
-// @ts-ignore
+// @ts-ignore: Deno npm compatibility issue with FileCookieStore constructor
 const cookieJar = new ExtendedCookieJar(
   new (FileCookieStore.default || FileCookieStore)(cookiePath),
 );
