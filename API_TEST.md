@@ -69,7 +69,8 @@
 
 ## 7. 衍生品与深度洞察
 
-- **期权链 (Options):** http://64.69.34.176:3007/options/AAPL
+- **期权链 (Options - 默认最近到期):** http://64.69.34.176:3007/options/AAPL
+- **期权链 (Options - 指定日期):** http://64.69.34.176:3007/options/AAPL?date=2025-03-21
 - **市场洞察 (Insights):** http://64.69.34.176:3007/insights/MSFT
 - **原始财务序列:** http://64.69.34.176:3007/fundamentals/GOOG
 

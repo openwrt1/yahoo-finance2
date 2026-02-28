@@ -267,8 +267,16 @@ app.get("/trending/:region", async (req, res) => {
 
 // 接口 12: 期权链 (Options)
 app.get("/options/:symbol", async (req, res) => {
+  const { symbol } = req.params;
+  const { date } = req.query;
   try {
-    const result = await yahooFinance.options(req.params.symbol);
+    const queryOptions: any = {};
+    if (date) {
+      // 支持传入 YYYY-MM-DD 字符串或 Unix 时间戳 (秒)
+      const d = new Date(date as string);
+      queryOptions.date = isNaN(d.getTime()) ? Number(date) : d;
+    }
+    const result = await yahooFinance.options(symbol, queryOptions);
     res.json(result);
   } catch (error) {
     res
