@@ -14,8 +14,9 @@ const CONFIG_FAKE_URL = "http://config.yf2/";
 let crumb: string | null = null;
 
 const parseHtmlEntities = (str: string) =>
-  str.replace(/&#x([0-9A-Fa-f]{1,3});/gi, (_, numStr) =>
-    String.fromCharCode(parseInt(numStr, 16)),
+  str.replace(
+    /&#x([0-9A-Fa-f]{1,3});/gi,
+    (_, numStr) => String.fromCharCode(parseInt(numStr, 16)),
   );
 
 type CrumbOptions = Parameters<typeof fetch>[1] & {
@@ -143,7 +144,7 @@ export async function _getCrumb(
         };
         logger.debug(
           "fetch",
-          consentLocation /*, collectConsentFetchOptions */,
+          consentLocation, /*, collectConsentFetchOptions */
         );
 
         const collectConsentResponse = await fetch(
@@ -152,17 +153,16 @@ export async function _getCrumb(
         );
         const collectConsentBody = await collectConsentResponse.text();
 
-        const collectConsentResponseParams =
-          [
-            ...collectConsentBody.matchAll(
-              /<input type="hidden" name="([^"]+)" value="([^"]+)">/g,
-            ),
-          ]
-            .map(
-              ([, name, value]) =>
-                `${name}=${encodeURIComponent(parseHtmlEntities(value))}&`,
-            )
-            .join("") + "agree=agree&agree=agree";
+        const collectConsentResponseParams = [
+          ...collectConsentBody.matchAll(
+            /<input type="hidden" name="([^"]+)" value="([^"]+)">/g,
+          ),
+        ]
+          .map(
+            ([, name, value]) =>
+              `${name}=${encodeURIComponent(parseHtmlEntities(value))}&`,
+          )
+          .join("") + "agree=agree&agree=agree";
 
         const collectConsentSubmitFetchOptions: typeof fetchOptions = {
           ...consentFetchOptions,
@@ -182,7 +182,7 @@ export async function _getCrumb(
         };
         logger.debug(
           "fetch",
-          consentLocation /*, collectConsentSubmitFetchOptions */,
+          consentLocation, /*, collectConsentSubmitFetchOptions */
         );
         const collectConsentSubmitResponse = await fetch(
           consentLocation,
@@ -227,7 +227,7 @@ export async function _getCrumb(
 
         logger.debug(
           "fetch",
-          collectConsentSubmitResponseLocation /*, copyConsentFetchOptions */,
+          collectConsentSubmitResponseLocation, /*, copyConsentFetchOptions */
         );
         const copyConsentResponse = await fetch(
           collectConsentSubmitResponseLocation,
@@ -245,8 +245,9 @@ export async function _getCrumb(
           );
         }
 
-        const copyConsentResponseLocation =
-          copyConsentResponse.headers.get("location");
+        const copyConsentResponseLocation = copyConsentResponse.headers.get(
+          "location",
+        );
         if (!copyConsentResponseLocation) {
           throw new Error(
             "collectConsentSubmitResponse unexpectedly did not return a Location header, please report.",
