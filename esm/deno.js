@@ -64,6 +64,10 @@ export default {
         "util": "node:util",
         "fs": "node:fs",
         "path": "node:path",
+        "os": "node:os",
+        "events": "node:events",
+        "url": "node:url",
+        "punycode": "node:punycode",
         "tough-cookie": "npm:tough-cookie@^5.1.1",
         "tough-cookie-file-store": "npm:tough-cookie-file-store@^2.0.3",
         "ts-json-schema-generator": "npm:ts-json-schema-generator@^2.4.0"
@@ -73,7 +77,8 @@ export default {
             "tests/fixtures",
             "tests/http",
             "**/*.schema.json",
-            "API_TEST.md"
+            "API_TEST.md",
+            "my-server.ts"
         ]
     },
     "publish": {
@@ -89,5 +94,11 @@ export default {
     },
     "compilerOptions": {
         "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"]
+    },
+    "lint": {
+        "rules": {
+            "exclude": ["no-explicit-any", "ban-ts-comment", "ban-unused-ignore"]
+        },
+        "exclude": ["my-server.ts"]
     }
 };

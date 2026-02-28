@@ -64,6 +64,10 @@ declare namespace _default {
         util: string;
         fs: string;
         path: string;
+        os: string;
+        events: string;
+        url: string;
+        punycode: string;
         "tough-cookie": string;
         "tough-cookie-file-store": string;
         "ts-json-schema-generator": string;
@@ -77,6 +81,14 @@ declare namespace _default {
     }
     namespace compilerOptions {
         let lib: string[];
+    }
+    namespace lint {
+        export namespace rules {
+            let exclude_2: string[];
+            export { exclude_2 as exclude };
+        }
+        let exclude_3: string[];
+        export { exclude_3 as exclude };
     }
 }
 export default _default;
