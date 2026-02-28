@@ -1,10 +1,9 @@
-import express from "npm:express";
-import cors from "npm:cors";
+import express from "express";
+import cors from "cors";
 // 直接从本地源码入口导入
 import YahooFinance from "./src/index.ts";
 import { ExtendedCookieJar } from "./src/lib/cookieJar.ts";
-// @ts-ignore: Deno handles npm imports
-import { FileCookieStore } from "npm:tough-cookie-file-store@^2.0.3";
+import { FileCookieStore } from "tough-cookie-file-store";
 
 // 基础配置
 const fetchOptions = {
@@ -31,11 +30,11 @@ const yahooFinance = new YahooFinance({
   queue: { concurrency: 1 },
   // 开启调试模式：提供一个自定义 logger 来捕获并打印 debug 信息
   logger: {
-    info: (...args: any[]) => console.log(...args),
-    warn: (...args: any[]) => console.warn(...args),
-    error: (...args: any[]) => console.error(...args),
-    debug: (...args: any[]) => console.log("[DEBUG]", ...args),
-    dir: (obj: any) => console.dir(obj, { depth: null }),
+    info: (...args: unknown[]) => console.log(...args),
+    warn: (...args: unknown[]) => console.warn(...args),
+    error: (...args: unknown[]) => console.error(...args),
+    debug: (...args: unknown[]) => console.log("[DEBUG]", ...args),
+    dir: (obj: unknown) => console.dir(obj, { depth: null }),
   },
 });
 
@@ -62,11 +61,11 @@ app.get("/earnings/:symbol", async (req, res) => {
         module: "financials",
         type: "quarterly",
       });
-    } catch (err) {
+    } catch (_err) {
       console.warn(`Warning: Failed to fetch revenue for ${symbol}`);
     }
 
-    let revenueMap = new Map();
+    const revenueMap = new Map();
     financials.forEach((item) => {
       if (item.date && item.totalRevenue) {
         const date = new Date(item.date);
@@ -125,7 +124,7 @@ app.get("/peers/:symbol", async (req, res) => {
     const result = await yahooFinance.recommendationsBySymbol(symbol);
     const recommendedSymbols = result.recommendedSymbols || [];
     res.json(recommendedSymbols.map((r) => r.symbol));
-  } catch (error) {
+  } catch (_error) {
     res.json([]);
   }
 });
@@ -136,7 +135,7 @@ app.get("/screener", async (req, res) => {
   try {
     const result = await yahooFinance.screener(
       {
-        scrIds: (scrIds as any) || "day_gainers",
+        scrIds: (scrIds as string | string[]) || "day_gainers",
         count: count ? parseInt(count as string) : 25,
         region: "US",
         lang: "en-US",
