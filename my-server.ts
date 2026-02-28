@@ -33,7 +33,6 @@ if (!existsSync(cookiePath)) {
 }
 
 // 兼容 CJS 模块的导出格式
-// 增加 .FileCookieStore 检查以兼容本地 node_modules 环境
 const FileCookieStore =
   FileCookieStorePkg.FileCookieStore ||
   FileCookieStorePkg.default ||
@@ -42,10 +41,6 @@ const FileCookieStore =
 const cookieJar = new ExtendedCookieJar(
   new (FileCookieStore as any)(cookiePath),
 );
-
-
-
-
 // 实例化。注意：直接导入源码时，YahooFinance 就是类本身
 const yahooFinance = new YahooFinance({
   cookieJar,
