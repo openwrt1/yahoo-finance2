@@ -44,17 +44,13 @@ jobs:
       #          token: ${{ secrets.GH_TOKEN_GISTS }}
       #          gist_id: 67c118e65298627dc0a3745a06387d88
       #          file_path: ./tests/runtimes/results.yaml
-  release:
-    name: Release (if relevant)
+  sync-build:
+    name: Sync Build to Branch
     needs: ["tests"]
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
-      # https://github.com/semantic-release/semantic-release/issues/2469
-      contents: write # create releases
-      issues: write # issue comments and labels
-      pull-requests: write # ditto
-      id-token: write # The OIDC ID token is used for authentication with JSR, codecov, npm with provenance
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -63,10 +59,30 @@ jobs:
 
       - run: deno task build:npm
 
-      - name: Publish to NPM
-        run: |
-          cd npm
-          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-          npm publish --access public
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Deploy to Build Branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: npm
+          branch: build
+          clean: true
+
+  deploy:
+    name: Deploy to VPS
+    needs: ["tests"]
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Executing remote ssh commands using password
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            cd /root/yahoo-finance-proxy
+            git fetch origin dev
+            git reset --hard origin/dev
+            export PATH="$HOME/.deno/bin:$PATH"
+            deno task schema
+            pm2 restart 61
