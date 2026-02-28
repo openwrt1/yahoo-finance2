@@ -33,9 +33,12 @@ if (!existsSync(cookiePath)) {
 }
 
 // 兼容 CJS 模块的导出格式
-// @ts-ignore: Deno npm compatibility issue
-const FileCookieStore = FileCookieStorePkg.default || FileCookieStorePkg;
-// deno-lint-ignore no-explicit-any
+// 增加 .FileCookieStore 检查以兼容本地 node_modules 环境
+const FileCookieStore =
+  FileCookieStorePkg.FileCookieStore ||
+  FileCookieStorePkg.default ||
+  FileCookieStorePkg;
+
 const cookieJar = new ExtendedCookieJar(
   new (FileCookieStore as any)(cookiePath),
 );
@@ -179,6 +182,154 @@ app.get("/screener", async (req, res) => {
     } else {
       res.status(500).json({ error: String(error) });
     }
+  }
+});
+
+// 接口 6: 实时报价 (Quote) - 获取最精简的实时价格数据
+app.get("/quote/:symbol", async (req, res) => {
+  try {
+    const result = await yahooFinance.quote(req.params.symbol);
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 接口 7: 历史价格 (Historical) - 默认获取最近一个月
+app.get("/historical/:symbol", async (req, res) => {
+  try {
+    const result = await yahooFinance.historical(req.params.symbol, {
+      period1: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+    });
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 接口 8: K线图数据 (Chart) - 用于绘制图表
+app.get("/chart/:symbol", async (req, res) => {
+  try {
+    const result = await yahooFinance.chart(req.params.symbol, {
+      interval: "1d",
+      period1: "2024-01-01",
+    });
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 接口 9: 全局搜索 (Search) - 搜索股票、基金、新闻
+app.get("/search/:query", async (req, res) => {
+  try {
+    const result = await yahooFinance.search(req.params.query);
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 接口 10: 自动补全 (Autoc) - 输入关键词自动提示代码
+app.get("/autoc/:query", async (req, res) => {
+  try {
+    const result = await yahooFinance.autoc(req.params.query);
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 接口 11: 地区热搜 (Trending) - 看看某个国家大家都在搜什么
+app.get("/trending/:region", async (req, res) => {
+  try {
+    const result = await yahooFinance.trendingSymbols(
+      req.params.region || "US",
+    );
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 接口 12: 期权链 (Options)
+app.get("/options/:symbol", async (req, res) => {
+  try {
+    const result = await yahooFinance.options(req.params.symbol);
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 接口 13: 市场洞察 (Insights) - 包含技术分析和评级
+app.get("/insights/:symbol", async (req, res) => {
+  try {
+    const result = await yahooFinance.insights(req.params.symbol);
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 接口 14: 每日涨幅榜 (Daily Gainers)
+app.get("/daily-gainers", async (_req, res) => {
+  try {
+    const result = await yahooFinance.dailyGainers({ count: 10, region: "US" });
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 接口 15: 每日跌幅榜 (Daily Losers)
+app.get("/daily-losers", async (_req, res) => {
+  try {
+    const result = await yahooFinance.dailyLosers({ count: 10, region: "US" });
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
+// 接口 16: 财务时间序列 (Fundamentals Time Series)
+app.get("/fundamentals/:symbol", async (req, res) => {
+  try {
+    const result = await yahooFinance.fundamentalsTimeSeries(
+      req.params.symbol,
+      {
+        period1: "2023-01-01",
+        type: "quarterly",
+        module: "all",
+      },
+    );
+    res.json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : String(error) });
   }
 });
 

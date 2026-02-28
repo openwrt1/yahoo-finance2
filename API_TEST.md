@@ -1,9 +1,13 @@
 # Yahoo Finance Proxy API 测试指南
 
-本文档用于测试部署在 `web.sitepeng.dpdns.org` 上的 Yahoo Finance 代理服务接口。
+本文档用于测试部署在 `64.69.34.176` 上的 Yahoo Finance 代理服务接口。
+**基础 URL:** `http://64.69.34.176:3007`
 
-**基础 URL:** `http://web.sitepeng.dpdns.org:3007`  
-_(注意：如果你在宝塔面板配置了反向代理，请去掉 :3007 端口号)_
+---
+
+## 核心调试命令
+
+`deno run -A --node-modules-dir=false my-server.ts`
 
 ---
 
@@ -11,7 +15,7 @@ _(注意：如果你在宝塔面板配置了反向代理，请去掉 :3007 端�
 
 获取公司的基本面、市值、市盈率、财务摘要及财报日历。
 
-- **测试地址:** 点击测试 AAPL
+- **测试地址:** 点击测试 AAPL `http://64.69.34.176:3007/analysis/AAPL`
 - **接口路径:** `/analysis/:symbol`
 - **包含数据:**
   - `price`: 实时价格、公司全称、交易所信息。
@@ -27,7 +31,7 @@ _(注意：如果你在宝塔面板配置了反向代理，请去掉 :3007 端�
 
 获取过去几个季度的每股收益 (EPS) 和 营收 (Revenue) 实际值与预测值。
 
-- **测试地址:** 点击测试 TSLA
+- **测试地址:** 点击测试 TSLA `http://64.69.34.176:3007/earnings/TSLA`
 - **接口路径:** `/earnings/:symbol`
 - **包含数据:**
   - `date`: 财报截止日期。
@@ -41,21 +45,50 @@ _(注意：如果你在宝塔面板配置了反向代理，请去掉 :3007 端�
 
 获取与指定股票业务相似的其他公司代码列表。
 
-- **测试地址:** 点击测试 NVDA
+- **测试地址:** 点击测试 NVDA `http://64.69.34.176:3007/peers/NVDA`
 - **接口路径:** `/peers/:symbol`
 - **返回数据:** 字符串数组，例如 `["AMD", "AVGO", "INTC", ...]`。
 
 ---
 
+## 5. 实时行情与图表
+
+- **实时报价 (Quote):** 测试 AAPL `http://64.69.34.176:3007/quote/AAPL`
+- **历史价格 (Historical):** 测试 TSLA `http://64.69.34.176:3007/historical/TSLA`
+- **K线图原始数据 (Chart):** 测试 NVDA `http://64.69.34.176:3007/chart/NVDA`
+
+---
+
+## 6. 搜索与发现
+
+- **全局搜索 (Search):** 搜索 "Bitcoin" `http://64.69.34.176:3007/search/Bitcoin`
+- **自动补全 (Autoc):** 输入 "App" `http://64.69.34.176:3007/autoc/App`
+- **地区热搜 (Trending):** 美国热搜 `http://64.69.34.176:3007/trending/US`
+
+---
+
+## 7. 衍生品与深度洞察
+
+- **期权链 (Options):** 测试 AAPL `http://64.69.34.176:3007/options/AAPL`
+- **市场洞察 (Insights):** 测试 MSFT `http://64.69.34.176:3007/insights/MSFT`
+- **原始财务序列:** 测试 GOOG `http://64.69.34.176:3007/fundamentals/GOOG`
+
+---
+
+## 8. 市场排行榜
+
+- **今日涨幅榜:** 点击查看 `http://64.69.34.176:3007/daily-gainers`
+- **今日跌幅榜:** 点击查看 `http://64.69.34.176:3007/daily-losers`
+
 ## 4. 选股器 (Screener)
 
 获取市场热门列表，如涨幅榜、最活跃股票、核心资产等。
 
-- **今日涨幅榜:** 点击查看
-- **最活跃股票:** 点击查看
-- **低估值增长股:** 点击查看
-- **核心资产 (Mutual Funds):** 点击查看
-- **高收益债券基金:** 点击查看
+- **今日涨幅榜:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=day_gainers`
+- **最活跃股票:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=most_actives`
+- **低估值增长股:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=undervalued_growth_stocks`
+- **核心资产 (Mutual Funds):** 点击查看 `http://64.69.34.176:3007/screener?scrIds=portfolio_anchors`
+- **高收益债券基金:** 点击查看 `http://64.69.34.176:3007/screener?scrIds=high_yield_bond`
 - **接口路径:** `/screener`
 - **可选参数:**
   - `scrIds`: 选股器 ID (可选: `day_gainers`, `most_actives`, `undervalued_growth_stocks`, `portfolio_anchors` 等)。
