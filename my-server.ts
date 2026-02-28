@@ -292,7 +292,11 @@ app.get("/insights/:symbol", async (req, res) => {
 // 接口 14: 每日涨幅榜 (Daily Gainers)
 app.get("/daily-gainers", async (_req, res) => {
   try {
-    const result = await yahooFinance.dailyGainers({ count: 10, region: "US" });
+    const result = await yahooFinance.screener(
+      { scrIds: "day_gainers", count: 10, region: "US", lang: "en-US" },
+      undefined,
+      { validateResult: false },
+    );
     res.json(result);
   } catch (error) {
     res
@@ -304,7 +308,11 @@ app.get("/daily-gainers", async (_req, res) => {
 // 接口 15: 每日跌幅榜 (Daily Losers)
 app.get("/daily-losers", async (_req, res) => {
   try {
-    const result = await yahooFinance.dailyLosers({ count: 10, region: "US" });
+    const result = await yahooFinance.screener(
+      { scrIds: "day_losers", count: 10, region: "US", lang: "en-US" },
+      undefined,
+      { validateResult: false },
+    );
     res.json(result);
   } catch (error) {
     res
