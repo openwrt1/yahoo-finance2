@@ -276,8 +276,6 @@ app.get("/options/:symbol", async (req, res) => {
       if (/^\d+$/.test(date as string)) {
         queryOptions.date = Number(date);
       } else {
-        // 否则尝试解析为日期字符串
-        queryOptions.date = new Date(date as string);
         // 修正：确保日期字符串被解析为 UTC 时间，避免时区偏差导致 Yahoo 忽略参数
         const dateStr = date as string;
         // 如果已经是 ISO 格式则直接解析，否则拼接 T00:00:00Z 强制 UTC
