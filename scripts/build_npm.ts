@@ -27,14 +27,14 @@ await build({
     name: denoJson.name,
     version: denoJson.version,
     description: "JS API for Yahoo Finance",
-    author: "Gadi Cohen <dragon@wastelands.net>",
+    author: "openwrt1 178725420@qq.com",
     license: "MIT",
     repository: {
       type: "git",
-      url: "git+https://github.com/你的用户名/yahoo-finance2-stealth.git",
+      url: "git+https://github.com/openwrt1/yahoo-finance2.git",
     },
     bugs: {
-      url: "https://github.com/你的用户名/yahoo-finance2-stealth/issues",
+      url: "https://github.com/openwrt1/yahoo-finance2/issues",
     },
     keywords: [
       "yahoo",

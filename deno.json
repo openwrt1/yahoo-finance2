@@ -1,6 +1,6 @@
 {
-  "name": "@rocket/yahoo-finance2-stealth",
-  "version": "0.0.1-custom",
+  "name": "@openwrt1/yahoo-finance2-stealth",
+  "version": "0.0.2",
   "tasks": {
     "cli": "deno run -A bin/yahoo-finance.ts",
     "docs:gen": "deno doc --output=jsdocs --html $(jq -r '.exports | to_entries[] | .value' deno.json)",
