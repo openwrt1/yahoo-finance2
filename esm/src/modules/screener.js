@@ -258,9 +258,10 @@ const queryOptionsDefaults = {
  */
 export default function screener(scrIdOrOverrides, queryOptionsOverrides, moduleOptions) {
     // Accept ("scrId"), ("scrId", {opts}) and { scrIds: scrId, ...opts }
-    queryOptionsOverrides = typeof scrIdOrOverrides === "string"
-        ? { scrIds: scrIdOrOverrides, ...queryOptionsOverrides }
-        : scrIdOrOverrides;
+    queryOptionsOverrides =
+        typeof scrIdOrOverrides === "string"
+            ? { scrIds: scrIdOrOverrides, ...queryOptionsOverrides }
+            : scrIdOrOverrides;
     return this._moduleExec({
         moduleName: "screener",
         query: {
