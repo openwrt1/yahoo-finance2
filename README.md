@@ -1,3 +1,5 @@
+deno run -A --node-modules-dir=false my-server.ts 运行测试我的服务器脚本
+
 # yahoo-finance2
 
 Community API for Yahoo-Finance.
