@@ -416,6 +416,42 @@ app.get("/short-interest/:symbol", async (req, res) => {
   }
 });
 
+// 接口 19: 获取股票图标 (Logo/Avatar)
+app.get("/logo/:symbol", async (req, res) => {
+  const { symbol } = req.params;
+  try {
+    // 1. 尝试从 search 结果中获取 (Yahoo API 有时在某些区域会返回 logoUrl)
+    const searchResult = await yahooFinance.search(symbol);
+    const quote = searchResult.quotes.find(
+      (q) => q.symbol === symbol.toUpperCase(),
+    );
+
+    if (quote && (quote as any).logoUrl) {
+      return res.json({ url: (quote as any).logoUrl, source: "yahoo" });
+    }
+
+    // 2. 备选方案：通过 assetProfile 获取官网域名，使用第三方服务 (如 Clearbit)
+    const summary = await yahooFinance.quoteSummary(symbol, {
+      modules: ["assetProfile"],
+    });
+    const website = summary.assetProfile?.website;
+
+    if (website) {
+      const domain = new URL(website).hostname.replace("www.", "");
+      return res.json({
+        url: `https://logo.clearbit.com/${domain}`,
+        source: "clearbit",
+      });
+    }
+
+    res.status(404).json({ error: "Logo not found" });
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
 // --- 你的接口代码结束 ---
 
 app.listen(PORT, "0.0.0.0", () => {
