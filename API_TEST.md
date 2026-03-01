@@ -151,6 +151,32 @@
 
 ---
 
+## 11. 盘前/盘后首笔价格 (Session Price)
+
+获取指定日期盘前或盘后的第一笔成交价格。
+
+- **VPS 测试地址 (AAPL 盘前):** http://64.69.34.176:3007/session-price/AAPL?date=2026-02-27&type=pre
+- **本地测试地址 (AAPL 盘前):** http://localhost:3007/session-price/AAPL?date=2026-02-27&type=pre
+- **本地测试地址 (AAPL 盘中开盘):** http://localhost:3007/session-price/AAPL?date=2026-02-27&type=regular
+- **接口路径:** `/session-price/:symbol`
+- **参数说明:**
+  - `date`: 查询日期 (格式: YYYY-MM-DD)
+  - `type`: 交易时段 (可选值: `pre` 盘前, `regular` 盘中, `post` 盘后)
+
+---
+
+## 12. 盘前/盘后全量数据 (Session All Data)
+
+获取指定日期全天（盘前、盘中、盘后）的所有分钟级成交记录，按时段分类返回。
+
+- **VPS 测试地址:** http://64.69.34.176:3007/session-all/AAPL?date=2026-02-27
+- **本地测试地址:** http://localhost:3007/session-all/AAPL?date=2026-02-27
+- **接口路径:** `/session-all/:symbol`
+- **参数说明:**
+  - `date`: 查询日期 (格式: YYYY-MM-DD)
+
+---
+
 ## 故障排查
 
 1.  **连接超时/拒绝**: 请检查宝塔面板【安全】选项卡中是否放行了 `3007` 端口。
