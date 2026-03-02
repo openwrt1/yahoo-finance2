@@ -478,7 +478,7 @@ app.get("/bulk-calendar", async (req, res) => {
           .filter((q) => q && q.symbol)
           .map((q) => {
             // 自动判断盘前盘后逻辑
-            let earningsTimeCategory = null;
+            let earningsTimeCategory = "UNKNOWN"; // 默认未知
             if (q.earningsTimestamp) {
               const hour = parseInt(
                 new Intl.DateTimeFormat("en-US", {
@@ -490,7 +490,18 @@ app.get("/bulk-calendar", async (req, res) => {
 
               if (hour < 12)
                 earningsTimeCategory = "BMO"; // Before Market Open (盘前)
-              else if (hour >= 16) earningsTimeCategory = "AMC"; // After Market Close (盘后)
+              else if (hour >= 16)
+                earningsTimeCategory = "AMC"; // After Market Close (盘后)
+              else earningsTimeCategory = "TNS"; // Time Not Specified (日期定时间未定)
+            } else if (
+              q.earningsTimestampStart &&
+              q.earningsTimestampEnd &&
+              q.earningsTimestampStart.getTime() !==
+                q.earningsTimestampEnd.getTime()
+            ) {
+              earningsTimeCategory = "ESTIMATED"; // 日期范围估计
+            } else if (q.earningsTimestampStart) {
+              earningsTimeCategory = "TNS"; // 仅有日期占位符
             }
 
             return {
