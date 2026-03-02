@@ -89,7 +89,9 @@
 - **盈利趋势测试 (TSLA):** http://64.69.34.176:3007/quote-summary/TSLA?modules=earningsTrend
 - **财务报表测试 (TSLA):** http://64.69.34.176:3007/quote-summary/TSLA?modules=balanceSheetHistory,cashflowStatementHistory
 - **全量预测数据 (TSLA):** http://64.69.34.176:3007/quote-summary/TSLA?modules=earningsTrend,earningsHistory,financialData
+
 - **未来财报日期与发布时间 (TSLA):** http://64.69.34.176:3007/quote-summary/TSLA?modules=calendarEvents
+
 - **回报率对比 (YTD/1y/3y/5y - 以 SPY 为例):** http://64.69.34.176:3007/quote-summary/SPY?modules=fundPerformance
 - **公司业务简介与行业 (AAPL):** http://64.69.34.176:3007/quote-summary/AAPL?modules=assetProfile
 - **个股关键统计与回报 (TSLA 1年涨幅):** http://64.69.34.176:3007/quote-summary/TSLA?modules=defaultKeyStatistics
@@ -174,6 +176,20 @@
 - **接口路径:** `/session-all/:symbol`
 - **参数说明:**
   - `date`: 查询日期 (格式: YYYY-MM-DD)
+
+---
+
+## 13. 批量获取财报 (Bulk Calendar)
+
+针对大量股票（如 250 个）优化的接口。使用雅虎批量行情接口，速度比单个请求快 50 倍以上。支持美股、港股、A股、加密货币等混合查询。
+
+- **测试地址 (多品种混合):** http://64.69.34.176:3007/bulk-calendar?symbols=AAPL,TSLA,NVDA,600519.SS,0700.HK,BTC-USD
+- **接口路径:** `/bulk-calendar`
+- **参数说明:**
+  - `symbols`: 股票代码列表，用英文逗号分隔。
+- **返回数据:** 包含 `symbol`, `quoteType`, `earningsTimestamp`, `earningsTimeCategory` (BMO盘前/AMC盘后), `marketState` 和 `displayName`。
+
+> **提示:** 对于加密货币或 ETF，`earningsTimestamp` 会返回 `null`。
 
 ---
 

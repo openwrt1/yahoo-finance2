@@ -443,6 +443,91 @@ app.get("/session-all/:symbol", async (req, res) => {
   }
 });
 
+// 接口 22: 批量获取未来财报日期 (优化版)
+// 针对大量股票（如 250 个）的场景，使用雅虎的批量 quote 接口
+// 这样可以将 250 次 HTTP 请求缩减为 5 次左右，极大提高前端加载速度并减少后端压力
+app.get("/bulk-calendar", async (req, res) => {
+  const { symbols } = req.query;
+  if (!symbols) {
+    return res.status(400).json({ error: "请提供 symbols 参数，用逗号分隔" });
+  }
+
+  const symbolList = (symbols as string)
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter((s) => s.length > 0);
+
+  if (symbolList.length === 0) {
+    return res.json([]);
+  }
+
+  try {
+    const chunkSize = 50; // 雅虎 API 建议单次批量请求不超过 50-100 个
+    const allResults = [];
+
+    for (let i = 0; i < symbolList.length; i += chunkSize) {
+      const chunk = symbolList.slice(i, i + chunkSize);
+      // 使用 quote 接口支持批量查询，且包含财报时间戳
+      const quoteResults = await yahooFinance.quote(chunk);
+      const normalized = Array.isArray(quoteResults)
+        ? quoteResults
+        : [quoteResults];
+
+      allResults.push(
+        ...normalized
+          .filter((q) => q && q.symbol)
+          .map((q) => {
+            // 自动判断盘前盘后逻辑
+            let earningsTimeCategory = null;
+            if (q.earningsTimestamp) {
+              const hour = parseInt(
+                new Intl.DateTimeFormat("en-US", {
+                  timeZone: q.exchangeTimezoneName || "America/New_York",
+                  hour: "numeric",
+                  hour12: false,
+                }).format(q.earningsTimestamp),
+              );
+
+              if (hour < 12)
+                earningsTimeCategory = "BMO"; // Before Market Open (盘前)
+              else if (hour >= 16) earningsTimeCategory = "AMC"; // After Market Close (盘后)
+            }
+
+            return {
+              symbol: q.symbol,
+              quoteType: q.quoteType,
+              // 新增：格式化后的当地时间字符串，方便前端直接显示
+              earningsTimeFormatted: q.earningsTimestamp
+                ? new Intl.DateTimeFormat("en-US", {
+                    timeZone: q.exchangeTimezoneName || "America/New_York",
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  }).format(q.earningsTimestamp)
+                : null,
+              earningsTimestamp: q.earningsTimestamp || null,
+              earningsTimeCategory, // 新增：BMO (盘前) 或 AMC (盘后)
+              earningsTimestampStart: q.earningsTimestampStart || null,
+              earningsTimestampEnd: q.earningsTimestampEnd || null,
+              marketState: q.marketState,
+              displayName:
+                q.displayName || q.shortName || q.longName || q.symbol,
+            };
+          }),
+      );
+    }
+
+    res.json(allResults);
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
 // 接口 9: 全局搜索 (Search) - 搜索股票、基金、新闻
 app.get("/search/:query", async (req, res) => {
   try {
