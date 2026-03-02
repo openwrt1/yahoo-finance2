@@ -382,10 +382,10 @@ app.get("/session-all/:symbol", async (req, res) => {
     });
 
     // 调试代码：为 session-all 接口增加原始数据打印
-    console.log(
-      `\n[DEBUG] === Raw ALL Session Data for ${symbol} on ${date} ===`,
-    );
-    console.dir(result, { depth: null });
+    // console.log(
+    //   `\n[DEBUG] === Raw ALL Session Data for ${symbol} on ${date} ===`,
+    // );
+    // console.dir(result, { depth: null });
 
     const { meta, quotes = [] } = result;
     const referencePrice = meta.chartPreviousClose || meta.previousClose;
