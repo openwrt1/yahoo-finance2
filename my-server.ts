@@ -49,6 +49,7 @@ const yahooFinance = new YahooFinance({
   // 建议添加队列配置，降低被封 IP 的概率
   queue: { concurrency: 1 },
   // 开启调试模式：提供一个自定义 logger 来捕获并打印 debug 信息
+  /* 注释掉 Logger 以减少控制台噪音
   logger: {
     info: (...args: unknown[]) => console.log(...args),
     warn: (...args: unknown[]) => console.warn(...args),
@@ -56,6 +57,7 @@ const yahooFinance = new YahooFinance({
     debug: (...args: unknown[]) => console.log("[DEBUG]", ...args),
     dir: (obj: unknown) => console.dir(obj, { depth: null }),
   },
+  */
 });
 
 const app = express();
@@ -115,12 +117,12 @@ app.get("/earnings/:symbol", async (req, res) => {
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
     res.json(combined);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: String(error) });
-    }
+  } catch (error: any) {
+    console.error("Error in /earnings/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -139,12 +141,12 @@ app.get("/analysis/:symbol", async (req, res) => {
       ],
     });
     res.json(result);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: String(error) });
-    }
+  } catch (error: any) {
+    console.error("Error in /analysis/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -155,7 +157,8 @@ app.get("/peers/:symbol", async (req, res) => {
     const result = await yahooFinance.recommendationsBySymbol(symbol);
     const recommendedSymbols = result.recommendedSymbols || [];
     res.json(recommendedSymbols.map((r) => r.symbol));
-  } catch (_error) {
+  } catch (error) {
+    console.error("Error in /peers/:symbol:", error);
     res.json([]);
   }
 });
@@ -175,12 +178,12 @@ app.get("/screener", async (req, res) => {
       { validateResult: false },
     );
     res.json(result);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: String(error) });
-    }
+  } catch (error: any) {
+    console.error("Error in /screener:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -189,10 +192,11 @@ app.get("/quote/:symbol", async (req, res) => {
   try {
     const result = await yahooFinance.quote(req.params.symbol);
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /quote/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -205,10 +209,11 @@ app.get("/historical/:symbol", async (req, res) => {
         .split("T")[0],
     });
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /historical/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -220,10 +225,11 @@ app.get("/chart/:symbol", async (req, res) => {
       period1: "2024-01-01",
     });
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /chart/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -350,7 +356,9 @@ app.get("/session-price/:symbol", async (req, res) => {
         ? "查询成功"
         : `该时段内无成交记录。为您提供上一个交易时段的收盘价(Reference Price)作为参考: ${referencePrice}`,
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error in /session-price/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -436,7 +444,9 @@ app.get("/session-all/:symbol", async (req, res) => {
           ? "查询成功"
           : `该日期无成交记录。参考价: ${referencePrice}`,
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error in /session-all/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -532,7 +542,9 @@ app.get("/bulk-calendar", async (req, res) => {
     }
 
     res.json(allResults);
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error in /bulk-calendar:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -544,10 +556,11 @@ app.get("/search/:query", async (req, res) => {
   try {
     const result = await yahooFinance.search(req.params.query);
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /search/:query:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -556,10 +569,11 @@ app.get("/autoc/:query", async (req, res) => {
   try {
     const result = await yahooFinance.autoc(req.params.query);
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /autoc/:query:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -570,10 +584,11 @@ app.get("/trending/:region", async (req, res) => {
       req.params.region || "US",
     );
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /trending/:region:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -598,10 +613,11 @@ app.get("/options/:symbol", async (req, res) => {
     }
     const result = await yahooFinance.options(symbol, queryOptions);
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /options/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -610,10 +626,11 @@ app.get("/insights/:symbol", async (req, res) => {
   try {
     const result = await yahooFinance.insights(req.params.symbol);
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /insights/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -626,10 +643,11 @@ app.get("/daily-gainers", async (_req, res) => {
       { validateResult: false },
     );
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /daily-gainers:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -642,10 +660,11 @@ app.get("/daily-losers", async (_req, res) => {
       { validateResult: false },
     );
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /daily-losers:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -661,10 +680,11 @@ app.get("/fundamentals/:symbol", async (req, res) => {
       },
     );
     res.json(result);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /fundamentals/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -690,7 +710,9 @@ app.get(
 
       const result = await yahooFinance.quoteSummary(symbol, queryOptions);
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error in /quoteSummary/:symbol:", error);
+      if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
       res.status(500).json({
         error: error instanceof Error ? error.message : String(error),
       });
@@ -721,10 +743,11 @@ app.get("/short-interest/:symbol", async (req, res) => {
     // 注意：由于 yahoo-finance2 库的验证限制，历史做空序列暂时无法通过 fundamentalsTimeSeries 获取。
     // 我们仅返回当前最准确的做空数据。
     res.json({ symbol, current, history: [] });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : String(error) });
+  } catch (error: any) {
+    console.error("Error in /short-interest/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -757,7 +780,29 @@ app.get("/logo/:symbol", async (req, res) => {
     }
 
     res.status(404).json({ error: "Logo not found" });
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error in /logo/:symbol:", error);
+    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+// 接口 23: 获取个股新闻 (News)
+app.get("/news/:symbol", async (req, res) => {
+  const { symbol } = req.params;
+  try {
+    const result = await yahooFinance.search(
+      symbol,
+      { newsCount: 20 },
+      { validateResult: false }, // 修复: 跳过 Schema 验证，防止 Yahoo 返回新字段导致报错
+    );
+    res.json(result.news || []);
+  } catch (error: any) {
+    // 如果还是报错，这里会打印出具体多了什么字段 (查看 console 输出)
+    console.error("Error in /news/:symbol:", error);
+    if (error.errors) console.error("Validation Errors (New Fields?):", JSON.stringify(error.errors, null, 2));
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
