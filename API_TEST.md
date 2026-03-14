@@ -193,6 +193,25 @@
 
 ---
 
+## 14. 个股新闻 (News)
+
+获取指定股票、ETF 或加密货币的相关新闻报道列表。
+
+- **测试地址 (AAPL):** http://64.69.34.176:3007/news/AAPL
+- **测试地址 (BTC-USD):** http://64.69.34.176:3007/news/BTC-USD
+- **接口路径:** `/news/:symbol`
+- **返回数据:** JSON 数组，包含新闻详情对象。
+  - `uuid`: 新闻唯一标识符。
+  - `title`: 新闻标题。
+  - `publisher`: 发布媒体（如 Bloomberg, Reuters, Yahoo Finance）。
+  - `link`: 新闻原文链接。
+  - `providerPublishTime`: 发布时间戳（Unix 秒）。
+  - `type`: 内容类型（通常为 `STORY` 或 `VIDEO`）。
+  - `thumbnail`: 缩略图对象（包含 `resolutions` 数组，提供不同尺寸的图片 URL）。
+  - `relatedTickers`: 该新闻关联的其他股票代码列表。
+
+---
+
 ## 故障排查
 
 1.  **连接超时/拒绝**: 请检查宝塔面板【安全】选项卡中是否放行了 `3007` 端口。
