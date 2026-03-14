@@ -183,7 +183,7 @@
 
 针对大量股票（如 250 个）优化的接口。使用雅虎批量行情接口，速度比单个请求快 50 倍以上。支持美股、港股、A股、加密货币等混合查询。
 
-- **测试地址 (多品种混合):** http://64.69.34.176:3007/bulk-calendar?symbols=AAPL,TSLA,NVDA,600519.SS,0700.HK,BTC-USD
+- **测试地址 (多品种混合):** http://64.69.34.176:3007/bulk-calendar?symbols=AAPL,TSLA,NVDA,FLY
 - **接口路径:** `/bulk-calendar`
 - **参数说明:**
   - `symbols`: 股票代码列表，用英文逗号分隔。
