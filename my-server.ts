@@ -7,6 +7,9 @@ import { ExtendedCookieJar } from "./src/lib/cookieJar.ts";
 import FileCookieStorePkg from "tough-cookie-file-store";
 import { existsSync, writeFileSync } from "node:fs";
 
+// 引入 cheerio 用于解析 HTML (Deno 原生支持 npm: 前缀)
+import * as cheerio from "npm:cheerio";
+
 // 基础配置
 const fetchOptions = {
   headers: {
@@ -808,6 +811,8 @@ app.get("/news/:symbol", async (req, res) => {
     });
   }
 });
+
+
 
 // --- 你的接口代码结束 ---
 
