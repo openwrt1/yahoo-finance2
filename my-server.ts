@@ -7,6 +7,9 @@ import { ExtendedCookieJar } from "./src/lib/cookieJar.ts";
 import FileCookieStorePkg from "tough-cookie-file-store";
 import { existsSync, writeFileSync } from "node:fs";
 
+// 引入 cheerio 用于解析 HTML (Deno 原生支持 npm: 前缀)
+import * as cheerio from "npm:cheerio";
+
 // 基础配置
 const fetchOptions = {
   headers: {
@@ -803,6 +806,58 @@ app.get("/news/:symbol", async (req, res) => {
     // 如果还是报错，这里会打印出具体多了什么字段 (查看 console 输出)
     console.error("Error in /news/:symbol:", error);
     if (error.errors) console.error("Validation Errors (New Fields?):", JSON.stringify(error.errors, null, 2));
+    res.status(500).json({
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+// 接口 24: 抓取雅虎财经的 IPO 日历 (网页爬虫方案)
+// 请求示例: /calendar/ipo 或 /calendar/ipo?date=2024-03-01
+app.get("/calendar/ipo", async (req, res) => {
+  const { date } = req.query; // 支持传入 date (YYYY-MM-DD) 查询特定周
+  let targetUrl = "https://finance.yahoo.com/calendar/ipo";
+  if (date) {
+    targetUrl += `?day=${date}`;
+  }
+
+  try {
+    // 复用已有的 fetchOptions (带有浏览器的 User-Agent) 以防被反爬拦截
+    const response = await fetch(targetUrl, {
+      headers: fetchOptions.headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Yahoo HTTP Error: ${response.status}`);
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    const results: any[] = [];
+    
+    // 雅虎财经的日历数据通常存在于表格中，遍历匹配行提取数据
+    $("table tbody tr").each((i, el) => {
+      const tds = $(el).find("td");
+      if (tds.length >= 6) {
+        results.push({
+          symbol: $(tds[0]).text().trim(),
+          company: $(tds[1]).text().trim(),
+          exchange: $(tds[2]).text().trim(),
+          date: $(tds[3]).text().trim(),
+          priceRange: $(tds[4]).text().trim(),
+          shares: $(tds[5]).text().trim(),
+        });
+      }
+    });
+
+    res.json({
+      queryDate: date || "current_week",
+      count: results.length,
+      data: results,
+    });
+  } catch (error: any) {
+    console.error("Error in /calendar/ipo:", error);
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
