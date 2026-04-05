@@ -1,0 +1,789 @@
+```diff
+--- a/Users/rocket/Documents/GitHub/my-site/src/components/BrokerTradingStatus.vue
++++ b/Users/rocket/Documents/GitHub/my-site/src/components/BrokerTradingStatus.vue
+@@ -14,29 +14,25 @@
+ const holidayInfoText = ref("正在获取节假日信息...");
+ const marketHolidays = ref([]); // To store parsed market holidays
+ const nyTimeLabel = ref("");
+-const currentNyMins = ref(0); // Current NY time in minutes from 00:00 (0-1439). For 24-hour bars.
+-const currentNyDayOfWeek = ref(0); // Current NY weekday (0=Sun, 6=Sat)
+-const currentNyTotalMinsOfWeek = ref(0); // Current NY time in minutes from start of week (0 to 7*1440-1). For 7-day bar.
++const currentNyMins = ref(0); // Current NY time in minutes from today's 00:00 (0-1439).
++const currentNyDateStr = ref(""); // Reactive string for today's date YYYY-MM-DD
+ 
+ // Dragging functionality states
+ const isDragging = ref(false);
+-const draggedNyMinsOfDay = ref(null); // For 24-hour bars
+-const draggedNyTotalMinsOfWeek = ref(null); // For 7-day bar
+-const schwabTimelineRef = ref(null);
+-const firstradeTimelineRef = ref(null);
++const draggedNyTotalMinsOfWeek = ref(null); // 0 to 10080 minutes for 7-day bar
+ const combinedWeeklyTimelineRef = ref(null); // New ref for the 7-day bar
+-const activeTimelineRef = ref(null);
+-const activeDragType = ref(null); // '24h' or '7d'
+ 
+-// Computed property for the time displayed on the indicator on 24-hour bars
+-const displayNyMinsOfDay = computed(() => {
++const TOTAL_MINUTES_IN_WEEK = 7 * 1440; // 10080 minutes
++
++// Timeline represents Today (Day 0) to Today+6 (Day 6)
++const displayNyTotalMins = computed(() => {
+   return draggedNyTotalMinsOfWeek.value !== null
+     ? draggedNyTotalMinsOfWeek.value
+-    : currentNyTotalMinsOfWeek.value;
++    : currentNyMins.value; // Current time maps exactly to Day 0
+ });
+ 
+ // Fetch market holidays from Finnhub
+ async function fetchMarketHolidays() {
+   const apiKey = getRandomApiKey();
+   if (!apiKey) {
+@@ -91,55 +87,83 @@
+ }
+ 
+-// Get broker status for a given day and minute
+-function getBrokerStatus(broker, day, mins) {
++// Get broker status for a given day, minute, and specific date (for holiday check)
++function getBrokerStatus(broker, dayOfWeek, mins, dateStr) {
++  // Check if current date is a registered market holiday
++  const isHoliday = marketHolidays.value.some((h) => h.atDate === dateStr);
++  if (isHoliday) return "节假日";
++
+   if (broker === "schwab") {
+-    if (day === 6) return "休市"; // Saturday
+-    if (day === 0) return mins >= 20 * 60 ? "夜盘" : "休市"; // Sunday 8 PM onwards
++    if (dayOfWeek === 6) return "节假日"; // Saturday
++    if (dayOfWeek === 0) return mins >= 20 * 60 ? "夜盘" : "节假日"; // Sunday 8 PM onwards
+ 
+     if (mins >= 7 * 60 && mins < 9 * 60 + 25) return "盘前"; // 7:00 - 9:25
+     if (mins >= 9 * 60 + 30 && mins < 16 * 60) return "盘中"; // 9:30 - 16:00
+     if (mins >= 16 * 60 + 5 && mins < 20 * 60) return "盘后"; // 16:05 - 20:00
+-    if (mins >= 20 * 60) return day === 5 ? "休市" : "夜盘"; // Friday 8 PM onwards is closed, otherwise night session
++    if (mins >= 20 * 60) return dayOfWeek === 5 ? "节假日" : "夜盘"; // Friday 8 PM onwards is closed
+     if (mins < 7 * 60) return "夜盘"; // Midnight to 7 AM
+     return "缓冲期"; // Buffer periods
+   } else if (broker === "firstrade") {
+-    if (day === 6) return "休市"; // Saturday
+-    if (day === 0) return mins >= 20 * 60 ? "夜盘" : "休市"; // Sunday 8 PM onwards
++    if (dayOfWeek === 6) return "节假日"; // Saturday
++    if (dayOfWeek === 0) return mins >= 20 * 60 ? "夜盘" : "节假日"; // Sunday 8 PM onwards
+ 
+     if (mins < 4 * 60) return "夜盘"; // Midnight to 4 AM
+     if (mins >= 4 * 60 && mins < 8 * 60) return "休市段"; // Firstrade specific closed period
+     if (mins >= 8 * 60 && mins < 9 * 60 + 25) return "盘前"; // 08:00 - 09:25
+     if (mins >= 9 * 60 + 30 && mins < 16 * 60) return "盘中"; // 09:30 - 16:00
+     if (mins >= 16 * 60 + 5 && mins < 20 * 60) return "盘后"; // 16:05 - 20:00
+-    if (mins >= 20 * 60) return day === 5 ? "休市" : "夜盘"; // Friday 8 PM onwards is closed, otherwise night session
++    if (mins >= 20 * 60) return dayOfWeek === 5 ? "节假日" : "夜盘"; // Friday 8 PM onwards is closed
+ 
+     return "缓冲期"; // Buffer periods
+   }
+ }
+ 
+-// Computed properties for current broker statuses
++// Compute exact target info matching the currently dragged position
++const focusedTimeInfo = computed(() => {
++  let totalMins = Math.round(displayNyTotalMins.value);
++  if (totalMins >= TOTAL_MINUTES_IN_WEEK) totalMins = TOTAL_MINUTES_IN_WEEK - 1;
++
++  const dayOffset = Math.floor(totalMins / 1440);
++  const minsOfDay = totalMins % 1440;
++
++  const d = new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
++  d.setHours(0, 0, 0, 0);
++  d.setDate(d.getDate() + dayOffset);
++
++  const dayOfWeek = d.getDay();
++  const y = d.getFullYear();
++  const m = String(d.getMonth() + 1).padStart(2, "0");
++  const day = String(d.getDate()).padStart(2, "0");
++  const dateStr = `${y}-${m}-${day}`;
++
++  return { dayOfWeek, minsOfDay, dateStr };
++});
++
++// Current active status matching the slider pointer
+ const schwabStatus = computed(() => {
++  const info = focusedTimeInfo.value;
+   return getBrokerStatus(
+     "schwab",
+-    currentNyDayOfWeek.value, // Still use current day of week for 24h status
+-    Math.round(displayNyMinsOfDay.value),
++    info.dayOfWeek,
++    info.minsOfDay,
++    info.dateStr
+   );
+ });
+ 
+ const firstradeStatus = computed(() => {
++  const info = focusedTimeInfo.value;
+   return getBrokerStatus(
+     "firstrade",
+-    currentNyDayOfWeek.value,
+-    Math.round(displayNyMinsOfDay.value),
++    info.dayOfWeek,
++    info.minsOfDay,
++    info.dateStr
+   );
+ });
+ 
+-// Helper to format minutes to HH:MM
+ function formatMinsToTime(mins) {
+   if (mins === null || mins === undefined) return "00:00";
+   const roundedMins = Math.round(mins);
+-  if (roundedMins >= 1440) {
+-    return "24:00";
+-  }
+   const hours = Math.floor(roundedMins / 60);
+   const minutes = roundedMins % 60;
+   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+@@ -165,10 +189,17 @@
+     return "bg-orange-100 border-orange-300 text-orange-700 dark:bg-orange-900/40 dark:border-orange-700 dark:text-orange-300 font-bold shadow-sm";
+   if (sessionName === "休市段")
+     return "bg-slate-200 border-slate-400 text-slate-600 dark:bg-slate-700/70 dark:border-slate-500 dark:text-slate-300 font-bold shadow-sm";
++  if (sessionName === "节假日")
++    return "bg-slate-200 border-slate-400 text-slate-600 dark:bg-slate-700/70 dark:border-slate-500 dark:text-slate-300 font-bold shadow-sm";
+   return "";
+ }
+-// Update NY market status based on current time
++
+ function updateMarketStatus() {
+   const now = new Date();
+   const parts = new Intl.DateTimeFormat("en-US", {
+     timeZone: "America/New_York",
+     hour12: false,
+     weekday: "short",
+     hour: "numeric",
+     minute: "numeric",
+     timeZoneName: "short",
+@@ -188,144 +219,168 @@
+   }
+   if (hour === 24) hour = 0; // Handle 24:00 as 00:00 for calculation
+   const minsOfDay = hour * 60 + minute;
+   currentNyMins.value = minsOfDay;
+ 
+-  const daysMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+-  const day = daysMap[weekday];
+   const isDST = tzName.includes("EDT") || tzName.includes("Daylight");
+   nyTimeLabel.value = isDST ? "美东夏令时 (EDT)" : "美东冬令时 (EST)";
+-  currentNyDayOfWeek.value = day;
+-  // Calculate total minutes from the start of the week (Sunday 00:00)
+-  currentNyTotalMinsOfWeek.value = day * 1440 + minsOfDay;
++
++  const d = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
++  const y = d.getFullYear();
++  const m = String(d.getMonth() + 1).padStart(2, "0");
++  const day = String(d.getDate()).padStart(2, "0");
++  currentNyDateStr.value = `${y}-${m}-${day}`;
+ }
+ 
+ // --- Time slider drag logic ---
+ function handleDragMove(event) {
+   if (!isDragging.value) return;
+   event.preventDefault();
+ 
+-  const timelineEl = activeTimelineRef.value;
++  const timelineEl = combinedWeeklyTimelineRef.value;
+   if (!timelineEl) return;
+ 
+   const rect = timelineEl.getBoundingClientRect();
+   const clientX = event.type.startsWith("touch")
+     ? event.touches[0].clientX
+     : event.clientX;
+ 
+   let position = (clientX - rect.left) / rect.width;
+   position = Math.max(0, Math.min(1, position));
+ 
+-  if (activeDragType.value === "24h") {
+-    draggedNyMinsOfDay.value = position * 1440;
+-  } else if (activeDragType.value === "7d") {
+-    draggedNyTotalMinsOfWeek.value = position * TOTAL_MINUTES_IN_WEEK;
+-  }
++  draggedNyTotalMinsOfWeek.value = position * TOTAL_MINUTES_IN_WEEK;
+ }
+ 
+ function handleDragEnd() {
+   if (!isDragging.value) return;
+   isDragging.value = false;
+-  draggedNyMinsOfDay.value = null;
+   draggedNyTotalMinsOfWeek.value = null;
+ 
+-  window.removeEventListener("mousemove", handleDragMove); // Removed this line in previous diff, adding it back
++  window.removeEventListener("mousemove", handleDragMove);
+   window.removeEventListener("mouseup", handleDragEnd);
+   window.removeEventListener("touchmove", handleDragMove);
+   window.removeEventListener("touchend", handleDragEnd);
+-  activeTimelineRef.value = null;
+ }
+ 
+-function handleDragStart(event, type, broker = null) {
+-  // type: '24h' or '7d'
++function handleDragStart(event) {
+   isDragging.value = true;
+-  activeDragType.value = type;
+-
+-  if (type === "24h") {
+-    activeTimelineRef.value =
+-      broker === "schwab"
+-        ? schwabTimelineRef.value
+-        : firstradeTimelineRef.value;
+-    draggedNyMinsOfDay.value = currentNyMins.value;
+-  } else if (type === "7d") {
+-    activeTimelineRef.value = combinedWeeklyTimelineRef.value;
+-    draggedNyTotalMinsOfWeek.value = currentNyTotalMinsOfWeek.value;
+-  }
++  handleDragMove(event); // Trigger immediately for initial position
+ 
+   window.addEventListener("mousemove", handleDragMove, { passive: false });
+   window.addEventListener("mouseup", handleDragEnd);
+   window.addEventListener("touchmove", handleDragMove, { passive: false });
+   window.addEventListener("touchend", handleDragEnd);
+-  handleDragMove(event); // Trigger immediately for initial position
+ }
+ 
+ // Helper function to get the combined status for a given day and minute for weekly overview
+-function getCombinedMarketStatusForMinute(nyDayOfWeek, mins) {
+-  const schwabMinuteStatus = getBrokerStatus("schwab", nyDayOfWeek, mins);
+-  const firstradeMinuteStatus = getBrokerStatus("firstrade", nyDayOfWeek, mins);
++function getCombinedMarketStatusForMinute(nyDayOfWeek, mins, dateStr) {
++  const schwabMinuteStatus = getBrokerStatus("schwab", nyDayOfWeek, mins, dateStr);
++  const firstradeMinuteStatus = getBrokerStatus("firstrade", nyDayOfWeek, mins, dateStr);
+ 
+-  // Define priority: 盘中 > 盘前/盘后 > 夜盘 > 休市段 > 休市 > 缓冲期
+   const statusPriority = {
+-    盘中: 5,
+-    盘前: 4,
+-    盘后: 4,
+-    夜盘: 3,
+-    休市段: 2,
+-    休市: 1,
+-    缓冲期: 0, // Lowest priority, effectively treated as closed for daily summary
++    盘中: 6,
++    盘前: 5,
++    盘后: 5,
++    夜盘: 4,
++    休市段: 3,
++    缓冲期: 2,
++    节假日: 1,
+   };
+ 
+   const schwabP = statusPriority[schwabMinuteStatus] || 0;
+   const firstradeP = statusPriority[firstradeMinuteStatus] || 0;
+ 
+-  if (schwabP >= firstradeP) {
+-    return schwabMinuteStatus;
+-  } else {
+-    return firstradeMinuteStatus;
+-  }
++  return schwabP >= firstradeP ? schwabMinuteStatus : firstradeMinuteStatus;
+ }
+ 
+ // Helper to get CSS class for timeline segments (background color only)
+ function getTimelineSegmentClass(status) {
+   if (status === "夜盘") return "bg-purple-400/80 dark:bg-purple-500/80";
+   if (status === "盘前") return "bg-blue-400/80 dark:bg-blue-500/80";
+   if (status === "盘中") return "bg-green-400/80 dark:bg-green-500/80";
+   if (status === "盘后") return "bg-orange-400/80 dark:bg-orange-500/80";
+   if (status === "休市段" || status === "缓冲期")
+-    return "bg-slate-300/80 dark:bg-slate-500/80";
+-  if (status === "休市") return "bg-slate-300 dark:bg-slate-700"; // Full grey for closed days
++    return "bg-slate-400/80 dark:bg-slate-500/80";
++  if (status === "节假日") return "bg-slate-300 dark:bg-slate-700"; // Full grey for closed days
+   return "bg-slate-200/80 dark:bg-slate-700/80"; // Default grey for unknown/inactive
+ }
+ 
+-const TOTAL_MINUTES_IN_WEEK = 7 * 1440; // 10080 minutes
+-
+ const combinedWeeklyTimelineSegments = computed(() => {
++  const dummyTrigger = currentNyDateStr.value; // Reactivity dependency for day rollovers
+   const summary = [];
+   const nyTimezone = "America/New_York";
+-  const now = new Date();
++
++  const baseNyDateStrFull = new Date().toLocaleString("en-US", { timeZone: nyTimezone });
++  const baseNyDate = new Date(baseNyDateStrFull);
++  baseNyDate.setHours(0, 0, 0, 0);
++
++  // Precompute 7 days info for speed
++  const daysInfo = [];
+   for (let i = 0; i < 7; i++) {
+-    const dayDate = new Date(now);
+-    dayDate.setDate(now.getDate() + i);
++    const d = new Date(baseNyDate);
++    d.setDate(baseNyDate.getDate() + i);
++    const y = d.getFullYear();
++    const m = String(d.getMonth() + 1).padStart(2, "0");
++    const day = String(d.getDate()).padStart(2, "0");
++    daysInfo.push({
++      dayOfWeek: d.getDay(),
++      dateStr: `${y}-${m}-${day}`,
++      labelDate: d.toLocaleDateString("zh-CN", { weekday: "short", month: "short", day: "numeric" })
++    });
++  }
+ 
+-    const nyDayOfWeek = new Date(
+-      dayDate.toLocaleString("en-US", { timeZone: nyTimezone }),
+-    ).getDay();
+-    const nyDateStr = dayDate
+-      .toLocaleString("en-US", {
+-        timeZone: nyTimezone,
+-        year: "numeric",
+-        month: "2-digit",
+-        day: "2-digit",
+-      })
+-      .replace(/(\d+)\/(\d+)\/(\d+)/, "$3-$1-$2");
++  let currentSegmentStartMins = 0;
++  let currentSegmentStatus = null;
+ 
+-    const isHoliday = marketHolidays.value.some((h) => h.atDate === nyDateStr);
+-    const isWeekend = nyDayOfWeek === 0 || nyDayOfWeek === 6;
++  for (let totalMins = 0; totalMins < TOTAL_MINUTES_IN_WEEK; totalMins++) {
++    const dayOffset = Math.floor(totalMins / 1440);
++    const minsOfDay = totalMins % 1440;
++    const info = daysInfo[dayOffset];
+ 
+-    // Determine the status for each minute of the day
+-    const minuteStatuses = [];
+-    for (let mins = 0; mins < 1440; mins++) {
+-      if (isWeekend || isHoliday) {
+-        minuteStatuses.push("休市");
+-      } else {
+-        minuteStatuses.push(
+-          getCombinedMarketStatusForMinute(nyDayOfWeek, mins),
++    const status = getCombinedMarketStatusForMinute(info.dayOfWeek, minsOfDay, info.dateStr);
++
++    if (status !== currentSegmentStatus || totalMins === TOTAL_MINUTES_IN_WEEK - 1) {
++      if (currentSegmentStatus !== null) {
++        const duration = totalMins - currentSegmentStartMins + (totalMins === TOTAL_MINUTES_IN_WEEK - 1 ? 1 : 0);
++        const startDayOffset = Math.floor(currentSegmentStartMins / 1440);
++        const startInfo = daysInfo[startDayOffset];
++
++        summary.push({
++          status: currentSegmentStatus,
++          width: (duration / TOTAL_MINUTES_IN_WEEK) * 100,
++          class: getTimelineSegmentClass(currentSegmentStatus),
++          title: `${startInfo.labelDate}: ${currentSegmentStatus}`,
++        });
++      }
++      currentSegmentStartMins = totalMins;
++      currentSegmentStatus = status;
++    }
++  }
++  return summary;
++});
++
++function formatTimelinePointerLabel(totalMins) {
++  let safeMins = Math.round(totalMins);
++  if (safeMins >= TOTAL_MINUTES_IN_WEEK) safeMins = TOTAL_MINUTES_IN_WEEK - 1;
++
++  const dayOffset = Math.floor(safeMins / 1440);
++  const minsOfDay = safeMins % 1440;
++
++  const nyTimezone = "America/New_York";
++  const d = new Date(new Date().toLocaleString("en-US", { timeZone: nyTimezone }));
++  d.setHours(0, 0, 0, 0);
++  d.setDate(d.getDate() + dayOffset);
++
++  const daysMap = ["日", "一", "二", "三", "四", "五", "六"];
++  return `周${daysMap[d.getDay()]} ${formatMinsToTime(minsOfDay)}`;
++}
+ 
+ // Helper to get day labels for the 7-day timeline
+ const getDayLabels = computed(() => {
++  const dummyTrigger = currentNyDateStr.value;
+   const labels = [];
+   const nyTimezone = "America/New_York";
+-  const now = new Date();
++  const baseNyDate = new Date(new Date().toLocaleString("en-US", { timeZone: nyTimezone }));
++  baseNyDate.setHours(0, 0, 0, 0);
++
++  const daysMap = ["日", "一", "二", "三", "四", "五", "六"];
+   for (let i = 0; i < 7; i++) {
+-    const dayDate = new Date(now);
+-    dayDate.setDate(now.getDate() + i);
++    const d = new Date(baseNyDate);
++    d.setDate(baseNyDate.getDate() + i);
+     labels.push({
+-      dayOfWeek: dayDate.toLocaleDateString("zh-CN", { weekday: "short" }),
+-      date: dayDate.toLocaleDateString("zh-CN", {
+-        month: "short",
+-        day: "numeric",
+-      }),
++      dayOfWeek: `周${daysMap[d.getDay()]}`,
++      date: `${d.getMonth() + 1}/${d.getDate()}`,
+       isCurrentDay: i === 0, // Assuming the first day is "today"
+     });
+@@ -359,195 +414,142 @@
+     </div>
+   </div>
+ 
+-  <div class="w-full flex flex-col gap-3">
+-    <!-- 嘉信理财 -->
+-    <div
+-      class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-3 rounded-xl transition-all hover:shadow-md"
+-    >
+-      <div class="flex items-center justify-between mb-2">
+-        <span class="font-bold text-slate-700 dark:text-slate-200 text-sm"
+-          >嘉信理财 (Schwab)</span
+-        >
+-        <span
+-          v-if="['休市', '缓冲期'].includes(schwabStatus)"
+-          class="text-[11px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded"
+-          >当前{{
+-            schwabStatus === "缓冲期"
+-              ? "缓冲期 (9:25-9:30 / 16:00-16:05)"
+-              : "休市"
+-          }}</span
+-        >
+-      </div>
+-      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-center">
+-        <div
+-          class="py-1.5 rounded-lg border transition-colors"
+-          :class="getStatusBoxClass(schwabStatus, '夜盘')"
+-        >
+-          🌙 夜盘 20:00-07:00
++  <div class="w-full flex flex-col gap-4">
++    <!-- 全局合并状态容器 -->
++    <div class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-4 rounded-xl shadow-sm flex flex-col gap-5 transition-all">
++      
++      <!-- 嘉信理财 Info -->
++      <div class="flex flex-col gap-2.5">
++        <div class="flex items-center justify-between">
++          <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">嘉信理财 (Schwab)</span>
++          <span
++            v-if="['节假日', '缓冲期'].includes(schwabStatus)"
++            class="text-[11px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded"
++            >当前{{ schwabStatus === "缓冲期" ? "缓冲期" : "休市/节假日" }}</span
++          >
+         </div>
+-        <div
+-          class="py-1.5 rounded-lg border transition-colors"
+-          :class="getStatusBoxClass(schwabStatus, '盘前')"
+-        >
+-          🌅 盘前 07:00-09:25
+-        </div>
+-        <div
+-          class="py-1.5 rounded-lg border transition-colors relative flex items-center justify-center gap-1"
+-          :class="getStatusBoxClass(schwabStatus, '盘中')"
+-        >
+-          <span
+-            v-if="schwabStatus === '盘中'"
+-            class="absolute -top-1 -right-1 flex h-2.5 w-2.5"
+-            ><span
+-              class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
+-            ></span
+-            ><span
+-              class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"
+-            ></span
+-          ></span>
+-          ☀️ 盘中 09:30-16:00
+-        </div>
+-        <div
+-          class="py-1.5 rounded-lg border transition-colors"
+-          :class="getStatusBoxClass(schwabStatus, '盘后')"
+-        >
+-          🌇 盘后 16:05-20:00
++        <div class="grid grid-cols-3 md:grid-cols-5 gap-2 text-xs text-center">
++          <div class="py-1.5 rounded-lg border transition-colors" :class="getStatusBoxClass(schwabStatus, '夜盘')">🌙 夜盘</div>
++          <div class="py-1.5 rounded-lg border transition-colors" :class="getStatusBoxClass(schwabStatus, '盘前')">🌅 盘前</div>
++          <div class="py-1.5 rounded-lg border transition-colors relative flex items-center justify-center gap-1" :class="getStatusBoxClass(schwabStatus, '盘中')">
++            <span v-if="schwabStatus === '盘中'" class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
++              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
++              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
++            </span>
++            ☀️ 盘中
++          </div>
++          <div class="py-1.5 rounded-lg border transition-colors" :class="getStatusBoxClass(schwabStatus, '盘后')">🌇 盘后</div>
++          <div class="py-1.5 rounded-lg border transition-colors" :class="getStatusBoxClass(schwabStatus, '节假日')">🏖️ 节假日</div>
+         </div>
+       </div>
+ 
+-      <!-- Schwab 24小时动态进度条 -->
+-      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+-        <div
+-          class="flex justify-between items-center mb-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-medium"
+-        >
+-          <span>美东 00:00</span>
+-          <span>24小时交易状态分布与当前位置</span>
+-          <span>24:00</span>
++      <div class="w-full h-px bg-slate-100 dark:bg-slate-700/50"></div>
++
++      <!-- 第一证券 Info -->
++      <div class="flex flex-col gap-2.5">
++        <div class="flex items-center justify-between">
++          <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">第一证券 (Firstrade)</span>
++          <span
++            v-if="['节假日', '缓冲期'].includes(firstradeStatus)"
++            class="text-[11px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded"
++            >当前{{ firstradeStatus === "缓冲期" ? "缓冲期" : "休市/节假日" }}</span
++          >
+         </div>
+-        <div
+-          ref="schwabTimelineRef"
+-          class="relative w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full flex overflow-visible"
+-        >
+-          <div
+-            class="h-full bg-purple-400/80 dark:bg-purple-500/80 rounded-l-full"
+-            style="width: 29.17%"
+-            title="夜盘 00:00-07:00"
+-          ></div>
+-          <div
+-            class="h-full bg-blue-400/80 dark:bg-blue-500/80"
+-            style="width: 10.07%"
+-            title="盘前 07:00-09:25"
+-          ></div>
+-          <div
+-            class="h-full bg-slate-300/80 dark:bg-slate-500/80"
+-            style="width: 0.35%"
+-            title="缓冲休市 09:25-09:30"
+-          ></div>
+-          <div
+-            class="h-full bg-green-400/80 dark:bg-green-500/80"
+-            style="width: 27.08%"
+-            title="盘中 09:30-16:00"
+-          ></div>
+-          <div
+-            class="h-full bg-slate-300/80 dark:bg-slate-500/80"
+-            style="width: 0.35%"
+-            title="缓冲休市 16:00-16:05"
+-          ></div>
+-          <div
+-            class="h-full bg-orange-400/80 dark:bg-orange-500/80"
+-            style="width: 16.32%"
+-            title="盘后 16:05-20:00"
+-          ></div>
+-          <div
+-            class="h-full bg-purple-400/80 dark:bg-purple-500/80 rounded-r-full"
+-            style="width: 16.66%"
+-            title="夜盘 20:00-24:00"
+-          ></div>
+-
+-          <!-- 可拖拽的动态小三角指示器 -->
+-          <div
+-            @mousedown="handleDragStart($event, 'schwab')"
+-            @touchstart.prevent="handleDragStart($event, 'schwab')"
+-            class="absolute -top-[22px] flex flex-col items-center z-10 cursor-grab select-none"
+-            :class="{
+-              'transition-all duration-1000 ease-out': !isDragging,
+-              'cursor-grabbing': isDragging,
+-            }"
+-            :style="{
+-              left: `${(displayNyMinsOfDay / 1440) * 100}%`,
+-              transform: 'translateX(-50%)',
+-            }"
+-          >
+-            <div
+-              class="bg-red-500 text-white font-mono text-[10px] leading-none px-1.5 py-0.5 rounded shadow-md mb-[2px] font-bold"
+-              :class="{
+-                'ring-2 ring-red-300 ring-offset-2 ring-offset-white dark:ring-offset-slate-800':
+-                  isDragging,
+-              }"
+-            >
+-              <!-- Display time of day for the current position -->
+-              {{ formatMinsToTime(displayNyMinsOfDay) }}
+-            </div>
+-            <div
+-              class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-red-500"
+-            ></div>
++        <div class="grid grid-cols-3 md:grid-cols-6 gap-2 text-[11px] md:text-xs text-center">
++          <div class="py-1.5 rounded-lg border transition-colors" :class="getStatusBoxClass(firstradeStatus, '夜盘')">🌙 夜盘</div>
++          <div class="py-1.5 rounded-lg border transition-colors" :class="getStatusBoxClass(firstradeStatus, '休市段')">⏸️ 休市段</div>
++          <div class="py-1.5 rounded-lg border transition-colors" :class="getStatusBoxClass(firstradeStatus, '盘前')">🌅 盘前</div>
++          <div class="py-1.5 rounded-lg border transition-colors relative flex items-center justify-center gap-1" :class="getStatusBoxClass(firstradeStatus, '盘中')">
++            <span v-if="firstradeStatus === '盘中'" class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
++              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
++              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
++            </span>
++            ☀️ 盘中
+           </div>
++          <div class="py-1.5 rounded-lg border transition-colors" :class="getStatusBoxClass(firstradeStatus, '盘后')">🌇 盘后</div>
++          <div class="py-1.5 rounded-lg border transition-colors" :class="getStatusBoxClass(firstradeStatus, '节假日')">🏖️ 节假日</div>
+         </div>
+       </div>
+-    </div>
+ 
+-    <!-- 第一证券 -->
+-    <div
+-      class="bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-slate-200 dark:border-slate-700 p-3 rounded-xl transition-all hover:shadow-md"
+-    >
+-      <div class="flex items-center justify-between mb-2">
+-        <span class="font-bold text-slate-700 dark:text-slate-200 text-sm"
+-          >第一证券 (Firstrade)</span
+-        >
+-        <span
+-          v-if="['休市', '缓冲期'].includes(firstradeStatus)"
+-          class="text-[11px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded"
+-          >当前{{
+-            firstradeStatus === "缓冲期"
+-              ? "缓冲期 (9:25-9:30 / 16:00-16:05)"
+-              : "休市"
+-          }}</span
+-        >
+-      </div>
+-      <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs text-center">
+-        <div
+-          class="py-1.5 rounded-lg border transition-colors"
+-          :class="getStatusBoxClass(firstradeStatus, '夜盘')"
+-        >
+-          🌙 夜盘 20:00-04:00
+-        </div>
+-        <div
+-          class="py-1.5 rounded-lg border transition-colors"
+-          :class="getStatusBoxClass(firstradeStatus, '休市段')"
+-        >
+-          ⏸️ 休市 04:00-08:00
+-        </div>
+-        <div
+-          class="py-1.5 rounded-lg border transition-colors"
+-          :class="getStatusBoxClass(firstradeStatus, '盘前')"
+-        >
+-          🌅 盘前 08:00-09:25
+-        </div>
+-        <div
+-          class="py-1.5 rounded-lg border transition-colors relative flex items-center justify-center gap-1"
+-          :class="getStatusBoxClass(firstradeStatus, '盘中')"
+-        >
+-          <span
+-            v-if="firstradeStatus === '盘中'"
+-            class="absolute -top-1 -right-1 flex h-2.5 w-2.5"
+-            ><span
+-              class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
+-            ></span
+-            ><span
+-              class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"
+-            ></span
+-          ></span>
+-          ☀️ 盘中 09:30-16:00
+-        </div>
+-        <div
+-          class="py-1.5 rounded-lg border transition-colors"
+-          :class="getStatusBoxClass(firstradeStatus, '盘后')"
+-        >
+-          🌇 盘后 16:05-20:00
++      <!-- 统一共享的 7 天动态进度条 -->
++      <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50 w-full">
++        <div class="flex justify-between items-center mb-4 text-xs text-slate-500 font-medium px-1">
++          <span>{{ getDayLabels[0].date }} (今日)</span>
++          <span>7 天交易状态动态预测拖拽轴</span>
++          <span>{{ getDayLabels[6].date }} (+6天)</span>
+         </div>
+-      </div>
+ 
+-      <!-- Firstrade 24小时动态进度条 -->
+-      <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+-        <div
+-          class="flex justify-between items-center mb-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-medium"
+-        >
+-          <span>美东 00:00</span>
+-          <span>24小时交易状态分布与当前位置</span>
+-          <span>24:00</span>
+-        </div>
+         <div
+-          ref="firstradeTimelineRef"
+-          class="relative w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full flex overflow-visible"
++          ref="combinedWeeklyTimelineRef"
++          class="relative w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full flex overflow-visible"
+         >
++          <!-- 生成的 7 天连续分段块 -->
+           <div
+-            class="h-full bg-purple-400/80 dark:bg-purple-500/80 rounded-l-full"
+-            style="width: 16.67%"
+-            title="夜盘 00:00-04:00"
+-          ></div>
+-          <div
+-            class="h-full bg-slate-300/80 dark:bg-slate-500/80 border-x border-white/20 dark:border-slate-800/50"
+-            style="width: 16.67%"
+-            title="休市段 04:00-08:00"
+-          ></div>
+-          <div
+-            class="h-full bg-blue-400/80 dark:bg-blue-500/80"
+-            style="width: 5.9%"
+-            title="盘前 08:00-09:25"
+-          ></div>
+-          <div
+-            class="h-full bg-slate-300/80 dark:bg-slate-500/80"
+-            style="width: 0.35%"
+-            title="缓冲休市 09:25-09:30"
+-          ></div>
+-          <div
+-            class="h-full bg-green-400/80 dark:bg-green-500/80"
+-            style="width: 27.08%"
+-            title="盘中 09:30-16:00"
+-          ></div>
+-          <div
+-            class="h-full bg-slate-300/80 dark:bg-slate-500/80"
+-            style="width: 0.35%"
+-            title="缓冲休市 16:00-16:05"
+-          ></div>
+-          <div
+-            class="h-full bg-orange-400/80 dark:bg-orange-500/80"
+-            style="width: 16.32%"
+-            title="盘后 16:05-20:00"
+-          ></div>
+-          <div
+-            class="h-full bg-purple-400/80 dark:bg-purple-500/80 rounded-r-full"
+-            style="width: 16.66%"
+-            title="夜盘 20:00-24:00"
++            v-for="(seg, idx) in combinedWeeklyTimelineSegments"
++            :key="idx"
++            :class="seg.class"
++            :style="{ width: `${seg.width}%` }"
++            :title="seg.title"
++            class="h-full first:rounded-l-full last:rounded-r-full border-r border-black/5 dark:border-white/5 last:border-0"
+           ></div>
+ 
+           <!-- 可拖拽的动态小三角指示器 -->
+           <div
+-            @mousedown="handleDragStart($event, 'firstrade')"
+-            @touchstart.prevent="handleDragStart($event, 'firstrade')"
+-            class="absolute -top-[22px] flex flex-col items-center z-10 cursor-grab select-none"
++            @mousedown="handleDragStart($event)"
++            @touchstart.prevent="handleDragStart($event)"
++            class="absolute -top-[26px] flex flex-col items-center z-20 cursor-grab select-none"
+             :class="{
+               'transition-all duration-1000 ease-out': !isDragging,
+               'cursor-grabbing': isDragging,
+             }"
+             :style="{
+-              left: `${(displayNyMinsOfDay / 1440) * 100}%`,
++              left: `${(displayNyTotalMins / TOTAL_MINUTES_IN_WEEK) * 100}%`,
+               transform: 'translateX(-50%)',
+             }"
+           >
+             <div
+-              class="bg-red-500 text-white font-mono text-[10px] leading-none px-1.5 py-0.5 rounded shadow-md mb-[2px] font-bold"
++              class="bg-red-500 text-white font-mono text-[11px] leading-none px-2 py-1 rounded shadow-md mb-[2px] font-bold whitespace-nowrap"
+               :class="{
+-                'ring-2 ring-red-300 ring-offset-2 ring-offset-white dark:ring-offset-slate-800':
+-                  isDragging,
++                'ring-2 ring-red-300 ring-offset-2 ring-offset-white dark:ring-offset-slate-800': isDragging,
+               }"
+             >
+-              <!-- Display time of day for the current position -->
+-              {{ formatMinsToTime(displayNyMinsOfDay) }}
++              {{ formatTimelinePointerLabel(displayNyTotalMins) }}
+             </div>
+             <div
+-              class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-red-500"
++              class="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-red-500"
+             ></div>
+           </div>
+         </div>
++        
++        <!-- 底部日期标签对齐指示线 -->
++        <div class="relative w-full h-4 mt-1.5">
++          <div
++            v-for="(label, idx) in getDayLabels"
++            :key="idx"
++            class="absolute flex flex-col items-center text-[10px] text-slate-400 w-12 -ml-6"
++            :style="{ left: `${(idx + 0.5) * 100 / 7}%` }"
++          >
++            <div class="h-1.5 w-px bg-slate-300 dark:bg-slate-600 mb-0.5"></div>
++            <span :class="{ 'font-bold text-slate-600 dark:text-slate-300': label.isCurrentDay }">
++              {{ label.dayOfWeek }}
++            </span>
++          </div>
++        </div>
+       </div>
+     </div>
+   </div>
