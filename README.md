@@ -1,4 +1,13 @@
-deno run -A --node-modules-dir=false my-server.ts 运行测试我的服务器脚本
+HTTP_PROXY=http://127.0.0.1:10808 HTTPS_PROXY=http://127.0.0.1:10808 deno run -A --node-modules-dir=false my-server.ts
+
+ 运行测试我的服务器脚本
+
+windows：  powershell
+$env:HTTP_PROXY="http://127.0.0.1:10808"; $env:HTTPS_PROXY="http://127.0.0.1:10808"; deno run -A --node-modules-dir=false my-server.ts
+
+cmd 
+set HTTP_PROXY=http://127.0.0.1:10808 && set HTTPS_PROXY=http://127.0.0.1:10808 && deno run -A --node-modules-dir=false my-server.ts
+
 
 # yahoo-finance2
 
