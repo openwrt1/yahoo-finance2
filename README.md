@@ -1,3 +1,4 @@
+bash
 HTTP_PROXY=http://127.0.0.1:10808 HTTPS_PROXY=http://127.0.0.1:10808 deno run -A --node-modules-dir=false my-server.ts
 
  运行测试我的服务器脚本
