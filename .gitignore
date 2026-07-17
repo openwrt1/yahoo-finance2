@@ -8,3 +8,4 @@
 npm
 /local
 cookies.json
+.DS_Store
