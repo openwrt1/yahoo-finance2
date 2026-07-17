@@ -122,7 +122,11 @@ app.get("/earnings/:symbol", async (req, res) => {
     res.json(combined);
   } catch (error: any) {
     console.error("Error in /earnings/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -146,7 +150,11 @@ app.get("/analysis/:symbol", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /analysis/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -183,7 +191,11 @@ app.get("/screener", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /screener:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -197,9 +209,14 @@ app.get("/quote/:symbol", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /quote/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -214,9 +231,14 @@ app.get("/historical/:symbol", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /historical/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -230,9 +252,14 @@ app.get("/chart/:symbol", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /chart/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -361,7 +388,11 @@ app.get("/session-price/:symbol", async (req, res) => {
     });
   } catch (error: any) {
     console.error("Error in /session-price/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -449,7 +480,11 @@ app.get("/session-all/:symbol", async (req, res) => {
     });
   } catch (error: any) {
     console.error("Error in /session-all/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -547,7 +582,11 @@ app.get("/bulk-calendar", async (req, res) => {
     res.json(allResults);
   } catch (error: any) {
     console.error("Error in /bulk-calendar:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -561,9 +600,14 @@ app.get("/search/:query", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /search/:query:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -574,9 +618,14 @@ app.get("/autoc/:query", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /autoc/:query:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -589,9 +638,14 @@ app.get("/trending/:region", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /trending/:region:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -618,9 +672,14 @@ app.get("/options/:symbol", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /options/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -631,9 +690,14 @@ app.get("/insights/:symbol", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /insights/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -648,9 +712,14 @@ app.get("/daily-gainers", async (_req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /daily-gainers:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -665,9 +734,14 @@ app.get("/daily-losers", async (_req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /daily-losers:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -685,9 +759,14 @@ app.get("/fundamentals/:symbol", async (req, res) => {
     res.json(result);
   } catch (error: any) {
     console.error("Error in /fundamentals/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -715,7 +794,11 @@ app.get(
       res.json(result);
     } catch (error: any) {
       console.error("Error in /quoteSummary/:symbol:", error);
-      if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+      if (error.errors)
+        console.error(
+          "Validation Errors:",
+          JSON.stringify(error.errors, null, 2),
+        );
       res.status(500).json({
         error: error instanceof Error ? error.message : String(error),
       });
@@ -748,9 +831,14 @@ app.get("/short-interest/:symbol", async (req, res) => {
     res.json({ symbol, current, history: [] });
   } catch (error: any) {
     console.error("Error in /short-interest/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
-      error: error instanceof Error ? error.message : String(error) });
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
@@ -785,7 +873,11 @@ app.get("/logo/:symbol", async (req, res) => {
     res.status(404).json({ error: "Logo not found" });
   } catch (error: any) {
     console.error("Error in /logo/:symbol:", error);
-    if (error.errors) console.error("Validation Errors:", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors:",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -805,7 +897,11 @@ app.get("/news/:symbol", async (req, res) => {
   } catch (error: any) {
     // 如果还是报错，这里会打印出具体多了什么字段 (查看 console 输出)
     console.error("Error in /news/:symbol:", error);
-    if (error.errors) console.error("Validation Errors (New Fields?):", JSON.stringify(error.errors, null, 2));
+    if (error.errors)
+      console.error(
+        "Validation Errors (New Fields?):",
+        JSON.stringify(error.errors, null, 2),
+      );
     res.status(500).json({
       error: error instanceof Error ? error.message : String(error),
     });
@@ -835,7 +931,7 @@ app.get("/calendar/ipo", async (req, res) => {
     const $ = cheerio.load(html);
 
     const results: any[] = [];
-    
+
     // 雅虎财经的日历数据通常存在于表格中，遍历匹配行提取数据
     $("table tbody tr").each((i, el) => {
       const tds = $(el).find("td");
